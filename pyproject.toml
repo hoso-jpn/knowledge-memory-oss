@@ -9,7 +9,13 @@ description = "Local, source-grounded Markdown memory search"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
+authors = [{ name = "hoso-jpn" }]
 dependencies = ["PyYAML==6.0.3"]
+
+[project.urls]
+Homepage = "https://github.com/hoso-jpn/knowledge-memory-oss"
+Repository = "https://github.com/hoso-jpn/knowledge-memory-oss"
+Issues = "https://github.com/hoso-jpn/knowledge-memory-oss/issues"
 
 [project.optional-dependencies]
 semantic = ["sentence-transformers==5.1.2"]
