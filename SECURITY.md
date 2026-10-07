@@ -8,8 +8,8 @@ v0.1はこのrepositoryの最初の公開版である。supported versionの方�
 
 security vulnerabilityを公開のGitHub Issue、PR、Discussionで報告しないこと。
 
-このrepositoryのGitHub Private Vulnerability Reporting（Securityタブの「Report a vulnerability」）が
-利用できる場合は、それを使って非公開で報告する。
+報告には、このrepositoryのGitHub Private Vulnerability Reportingを使う。
+Securityタブの「Report a vulnerability」から非公開で報告できる。
 
 API key、token、credential、private document、個人情報をIssue、PR、Discussionへ貼らないこと。
 再現に必要な場合も、実値ではなく種類・発生箇所・手順だけを書く。
