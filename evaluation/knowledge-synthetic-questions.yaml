@@ -1,0 +1,39 @@
+corpus: examples/knowledge-notion
+scope: demo
+questions:
+- id: q1
+  question: 架空工房概観の担当範囲は何か
+  query: 工房の三層
+  expect_ids:
+  - src-00000000000000000000000000000001
+- id: q2
+  question: 架空エージェント連携の担当範囲は何か
+  query: 共同スケジューラと推論器
+  expect_ids:
+  - src-00000000000000000000000000000002
+- id: q3
+  question: 架空ロボット実験の担当範囲は何か
+  query: 座標形式と仮想試験
+  expect_ids:
+  - src-00000000000000000000000000000003
+- id: q4
+  question: 架空資源管理の担当範囲は何か
+  query: 共同スケジューラと資源配分
+  expect_ids:
+  - src-00000000000000000000000000000004
+- id: q5
+  question: 共同スケジューラに触れた複数資料はどれか
+  query: 共同スケジューラ
+  expect_ids:
+  - src-00000000000000000000000000000002
+  - src-00000000000000000000000000000004
+  min_hits: 2
+- id: q6
+  question: 長いノートの末尾の表はどこか
+  query: 末尾証拠1
+  expect_ids:
+  - src-00000000000000000000000000000001
+- id: q7
+  question: 未収録の量子ポンプに根拠はあるか
+  query: 量子ポンプ
+  expect: unknown

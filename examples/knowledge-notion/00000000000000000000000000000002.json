@@ -1,0 +1,330 @@
+{
+  "page": {
+    "id": "00000000000000000000000000000002",
+    "url": "https://www.notion.so/00000000000000000000000000000002",
+    "created_time": "2025-02-01T10:00:00Z",
+    "last_edited_time": "2026-09-01T10:00:00Z",
+    "parent": {
+      "type": "data_source_id",
+      "data_source_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "properties": {
+      "Title": {
+        "type": "title",
+        "title": [
+          {
+            "type": "text",
+            "text": {
+              "content": "架空エージェント連携"
+            },
+            "plain_text": "架空エージェント連携"
+          }
+        ],
+        "id": "prop-0"
+      },
+      "分野": {
+        "type": "multi_select",
+        "multi_select": [
+          {
+            "name": "農学"
+          },
+          {
+            "name": "計測"
+          }
+        ],
+        "id": "prop-1"
+      },
+      "種別": {
+        "type": "select",
+        "select": {
+          "name": "判断"
+        },
+        "id": "prop-2"
+      },
+      "整理状態": {
+        "type": "select",
+        "select": {
+          "name": "整理済み"
+        },
+        "id": "prop-3"
+      },
+      "出典": {
+        "type": "rich_text",
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "完全に架空の受け入れ試験資料"
+            },
+            "plain_text": "完全に架空の受け入れ試験資料"
+          }
+        ],
+        "id": "prop-4"
+      },
+      "出典URL": {
+        "type": "url",
+        "url": "https://example.org/research",
+        "id": "prop-5"
+      },
+      "資料日": {
+        "type": "date",
+        "date": {
+          "start": "2020-01-01",
+          "end": null,
+          "time_zone": null
+        },
+        "id": "prop-6"
+      },
+      "元ファイル": {
+        "type": "rich_text",
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "synthetic-2.md"
+            },
+            "plain_text": "synthetic-2.md"
+          }
+        ],
+        "id": "prop-7"
+      },
+      "関係ない日": {
+        "type": "date",
+        "date": {
+          "start": "2000-01-01"
+        },
+        "id": "prop-8"
+      },
+      "関係ない分類": {
+        "type": "multi_select",
+        "multi_select": [
+          {
+            "name": "混入禁止"
+          }
+        ],
+        "id": "prop-9"
+      }
+    },
+    "object": "page"
+  },
+  "properties_full": {},
+  "blocks": [
+    {
+      "id": "synthetic-2-0",
+      "type": "heading_2",
+      "heading_2": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "研修要約"
+            },
+            "plain_text": "研修要約"
+          }
+        ]
+      }
+    },
+    {
+      "id": "synthetic-2-1",
+      "type": "paragraph",
+      "paragraph": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "共同スケジューラと推論器についての架空の研修要約。製品の仕様を説明する資料ではない。"
+            },
+            "plain_text": "共同スケジューラと推論器についての架空の研修要約。製品の仕様を説明する資料ではない。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "synthetic-2-2",
+      "type": "heading_2",
+      "heading_2": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "公式補足"
+            },
+            "plain_text": "公式補足"
+          }
+        ]
+      }
+    },
+    {
+      "id": "synthetic-2-3",
+      "type": "paragraph",
+      "paragraph": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "ここは補足の区分を保持するための人工文。Web確認日: 2026-09-20。実際の公式確認ではない。"
+            },
+            "plain_text": "ここは補足の区分を保持するための人工文。Web確認日: 2026-09-20。実際の公式確認ではない。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "synthetic-2-4",
+      "type": "heading_2",
+      "heading_2": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "適用案"
+            },
+            "plain_text": "適用案"
+          }
+        ]
+      }
+    },
+    {
+      "id": "synthetic-2-5",
+      "type": "paragraph",
+      "paragraph": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "ここは検証前の適用案。独立した観測ではない。"
+            },
+            "plain_text": "ここは検証前の適用案。独立した観測ではない。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "synthetic-2-6",
+      "type": "heading_2",
+      "heading_2": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "末尾の比較表"
+            },
+            "plain_text": "末尾の比較表"
+          }
+        ]
+      }
+    },
+    {
+      "id": "table-one",
+      "type": "table",
+      "table": {
+        "table_width": 2,
+        "has_column_header": true,
+        "has_row_header": false
+      },
+      "_children": [
+        {
+          "type": "table_row",
+          "table_row": {
+            "cells": [
+              [
+                {
+                  "type": "text",
+                  "text": {
+                    "content": "役割"
+                  },
+                  "plain_text": "役割"
+                }
+              ],
+              [
+                {
+                  "type": "text",
+                  "text": {
+                    "content": "対象"
+                  },
+                  "plain_text": "対象"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "type": "table_row",
+          "table_row": {
+            "cells": [
+              [
+                {
+                  "type": "text",
+                  "text": {
+                    "content": "末尾証拠2"
+                  },
+                  "plain_text": "末尾証拠2"
+                }
+              ],
+              [
+                {
+                  "type": "text",
+                  "text": {
+                    "content": "空欄と表の保持"
+                  },
+                  "plain_text": "空欄と表の保持"
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "synthetic-2-8",
+      "type": "heading_2",
+      "heading_2": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "原本記載の出典"
+            },
+            "plain_text": "原本記載の出典"
+          }
+        ]
+      }
+    },
+    {
+      "id": "synthetic-2-9",
+      "type": "paragraph",
+      "paragraph": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "https://example.org/synthetic/2"
+            },
+            "plain_text": "https://example.org/synthetic/2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "12345678-abcd-abcd-abcd-123456789abc",
+      "type": "file",
+      "file": {
+        "type": "file",
+        "name": "控え.md",
+        "caption": [
+          {
+            "type": "text",
+            "text": {
+              "content": "保存時点の控え"
+            },
+            "plain_text": "保存時点の控え"
+          }
+        ],
+        "file": {
+          "url": "https://files.example.org/object-1/notes.md?X-Amz-Signature=old&X-Amz-Date=old",
+          "expiry_time": "2026-01-01T00:00:00Z"
+        }
+      }
+    }
+  ]
+}

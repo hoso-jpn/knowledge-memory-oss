@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "knowledge-memory"
+version = "0.1.0"
+description = "Local, source-grounded Markdown memory search"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+dependencies = ["PyYAML==6.0.3"]
+
+[project.optional-dependencies]
+semantic = ["sentence-transformers==5.1.2"]
+mcp = ["mcp==1.26.0"]
+
+[project.scripts]
+km = "knowledge_memory.cli:main"
+km-hybrid = "knowledge_memory.hybrid:main"
+km-inbox = "knowledge_memory.inbox:main"
+km-sync = "knowledge_memory.sync:main"
+km-mcp = "knowledge_memory.mcp_server:main"
+km-eval-budget = "knowledge_memory.eval_budget:main"
+km-ops = "knowledge_memory.operations:main"
+km-profile = "knowledge_memory.profiles:main"
+km-retention = "knowledge_memory.retention:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

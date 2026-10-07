@@ -1,0 +1,23 @@
+version: 1
+profiles:
+- name: blog
+  scope: blog
+  vault: /outside/km/blog/vault
+  database: /outside/km/blog/index.sqlite3
+  state: /outside/km/blog/state
+  sync_config: blog.yaml
+  include_candidates: true
+- name: personal
+  scope: personal
+  vault: /outside/km/personal/vault
+  database: /outside/km/personal/index.sqlite3
+  state: /outside/km/personal/state
+  sync_config: personal.yaml
+  include_candidates: true
+- name: work
+  scope: work
+  vault: /outside/km/work/vault
+  database: /outside/km/work/index.sqlite3
+  state: /outside/km/work/state
+  sync_config: work.yaml
+  include_candidates: true

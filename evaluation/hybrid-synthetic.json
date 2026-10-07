@@ -1,0 +1,8 @@
+[
+  {"id":"exact","query":"線形モデル","expect_ids":["decision-model","note-conflict"],"kind":"literal"},
+  {"id":"short","query":"線形","expect_ids":["decision-model","note-conflict"],"kind":"short"},
+  {"id":"id","query":"decision-model","expect_ids":["decision-model"],"kind":"id"},
+  {"id":"natural","query":"線形モデルを使う判断の理由は何ですか","expect_ids":["decision-model"],"kind":"natural"},
+  {"id":"constraint","query":"同じ計測条件で比較する制約について教えて","expect_ids":["decision-model"],"kind":"natural"},
+  {"id":"unknown","query":"量子宇宙船の燃料タンク容量","expect_ids":[],"kind":"unknown"}
+]

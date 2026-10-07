@@ -1,0 +1,162 @@
+{
+  "benchmark": {
+    "environment": {
+      "python": "3.12.14",
+      "platform": "Linux-6.18.44-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "cpu": "x86_64",
+      "logical_cpus": 9,
+      "sqlite": "3.53.1",
+      "package": "0.1.0",
+      "ram_bytes": 10451496960,
+      "peak_rss_native": 30524,
+      "peak_rss_unit": "KiB",
+      "api_calls": 0,
+      "api_cost": 0,
+      "electricity_cost": null,
+      "mcp_connected": false,
+      "cloud_auto_connected": false
+    },
+    "repeats": 5,
+    "synthetic": true,
+    "rows": [
+      {
+        "records": 25,
+        "bytes": 25430,
+        "index_seconds": 0.011680614996294025,
+        "hash_seconds": [
+          0.0010924369998974726,
+          0.000930827998672612,
+          0.0010447560052853078,
+          0.0009011139991343953,
+          0.0008937219972722232
+        ],
+        "search_seconds": [
+          0.0014549929983331822,
+          0.0016517039985046722,
+          0.001291230997594539,
+          0.0012577310044434853,
+          0.0012490890003391542
+        ],
+        "hash_median_seconds": 0.000930827998672612,
+        "search_median_seconds": 0.001291230997594539
+      },
+      {
+        "records": 250,
+        "bytes": 254780,
+        "index_seconds": 0.10656742400169605,
+        "hash_seconds": [
+          0.009137701999861747,
+          0.008949442999437451,
+          0.009494829995674081,
+          0.008461170000373386,
+          0.00895901799958665
+        ],
+        "search_seconds": [
+          0.010073206001834478,
+          0.009623639998608269,
+          0.009954219000064768,
+          0.009537663994706236,
+          0.009763629001099616
+        ],
+        "hash_median_seconds": 0.00895901799958665,
+        "search_median_seconds": 0.009763629001099616
+      },
+      {
+        "records": 1000,
+        "bytes": 1019780,
+        "index_seconds": 0.42408937299478566,
+        "hash_seconds": [
+          0.03639564100012649,
+          0.03755026999715483,
+          0.03548974099976476,
+          0.03601416699530091,
+          0.03589890599687351
+        ],
+        "search_seconds": [
+          0.04257661800511414,
+          0.0412731789983809,
+          0.037316073998226784,
+          0.038025914000172634,
+          0.037191017996519804
+        ],
+        "hash_median_seconds": 0.03601416699530091,
+        "search_median_seconds": 0.038025914000172634
+      }
+    ],
+    "decision": "retain full hashing until target-machine latency/size demonstrates need for a watcher"
+  },
+  "recovery": {
+    "archive_sha256": "12f5ff3a042c5be3e869ebfb8a7f5dcc21f4bb76e5fecd24e449ae640c35e6a5",
+    "records": 17,
+    "same_bytes": true,
+    "queries": [
+      {
+        "query": "線形",
+        "same_results": true,
+        "result_ids": [
+          "decision-model",
+          "note-conflict"
+        ]
+      },
+      {
+        "query": "条件",
+        "same_results": true,
+        "result_ids": [
+          "decision-model",
+          "decision-with-a-very-long-identifierecision-with-a-very-long-identifierecision-with-a-very-long-identifier-xxxxxxxxxxxxxxxxxxxx",
+          "note-fenced",
+          "note-lead",
+          "note-long-fence",
+          "note-nested",
+          "note-trailing"
+        ]
+      },
+      {
+        "query": "量子宇宙船",
+        "same_results": true,
+        "result_ids": []
+      }
+    ],
+    "environment": {
+      "python": "3.12.14",
+      "platform": "Linux-6.18.44-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "cpu": "x86_64",
+      "logical_cpus": 9,
+      "sqlite": "3.53.1",
+      "package": "0.1.0",
+      "ram_bytes": 10451496960,
+      "peak_rss_native": 30780,
+      "peak_rss_unit": "KiB",
+      "api_calls": 0,
+      "api_cost": 0,
+      "electricity_cost": null,
+      "mcp_connected": false,
+      "cloud_auto_connected": false
+    }
+  },
+  "mcp": {
+    "mcp_connected": true,
+    "cloud_auto_connected": false,
+    "llm_initiated": false,
+    "tools": [
+      "search_memory",
+      "get_memory",
+      "build_context"
+    ],
+    "source_ids": [
+      "decision-model",
+      "note-conflict"
+    ],
+    "client": "official SDK stdio"
+  },
+  "user_time_study": {
+    "status": "not_measured",
+    "reason": "requires actual operator observations"
+  },
+  "target_machine": {
+    "status": "not_measured",
+    "reason": "run km-ops measure on the machine that operates the vault"
+  }
+}

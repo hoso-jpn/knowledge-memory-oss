@@ -1,0 +1,27 @@
+name: verify
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e ".[mcp]"
+      - run: python -m unittest discover -s tests -v
+      - run: km validate --vault examples/vault
+      - run: km index --vault examples/vault --db .state/demo.sqlite3
+      - run: km search --db .state/demo.sqlite3 --scope demo 育種
+      - run: km get --db .state/demo.sqlite3 --scope demo note-search-example
+      - run: km import-csv --csv examples/notion-csv/blog-sample.csv --vault .state/demo-vault --scope demo
+      - run: km import-csv --csv examples/notion-csv/blog-sample.csv --vault .state/demo-vault --scope demo
+      - run: km index --vault .state/demo-vault --db .state/demo-import.sqlite3
+      - run: km evaluate --db .state/demo-import.sqlite3 --questions evaluation/blog-sample-questions.yaml --scope demo --include-candidates
+      - run: km index --vault examples/context-vault --db .state/context.sqlite3
+      - run: km context --db .state/context.sqlite3 --scope demo --goal "収量予測の見直しを再開する" --project proj-harvest --budget 8000 --out .state/context.md

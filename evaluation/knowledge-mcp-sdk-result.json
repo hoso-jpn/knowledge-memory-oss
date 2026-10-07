@@ -1,0 +1,16 @@
+{
+  "mcp_connected": true,
+  "cloud_auto_connected": false,
+  "llm_initiated": false,
+  "tools": [
+    "search_memory",
+    "get_memory",
+    "build_context"
+  ],
+  "source_ids": [
+    "src-00000000000000000000000000000001"
+  ],
+  "client": "official SDK stdio",
+  "include_candidates": true,
+  "retrieval_verified": true
+}

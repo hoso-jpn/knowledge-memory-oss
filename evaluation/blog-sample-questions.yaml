@@ -1,0 +1,123 @@
+# Retrieval questions for the synthetic corpus in examples/notion-csv/blog-sample.csv.
+#
+# These measure whether the right record comes back, not whether its claim is true.
+# The imported notes are candidate snapshots, so a run needs --include-candidates.
+# Do not promote a record to active in order to make a question pass.
+#
+# expect: ids     -> at least one of expect_ids must be returned
+# expect: unknown -> nothing should be returned; anything returned is a false hit
+#
+# Queries are literal substrings. AND/OR and natural language are not implemented.
+
+corpus: examples/notion-csv/blog-sample.csv
+scope: demo
+
+questions:
+  - id: q01
+    question: 圃場で週次に計測している対象は何か
+    query: 草丈と葉色
+    expect_ids: [src-a1b2c3d4e5f60718293a4b5c6d7e8f90]
+
+  - id: q02
+    question: 空撮の飛行方法はどう決めているか
+    query: ドローンを定高度
+    expect_ids: [src-a1b2c3d4e5f60718293a4b5c6d7e8f90]
+
+  - id: q03
+    question: 計測手順の最初の作業は何か
+    query: 基準点を設置
+    expect_ids: [src-a1b2c3d4e5f60718293a4b5c6d7e8f90]
+
+  - id: q04
+    question: 計測時刻についての注意は引用元で何と書かれていたか
+    query: 計測は同一時刻
+    expect_ids: [src-a1b2c3d4e5f60718293a4b5c6d7e8f90]
+    note: 引用(blockquote)の中の文が索引に残っているかを見る
+
+  - id: q05
+    question: 表現型計測に関する記事はどれか
+    query: 表現型計測
+    expect_ids: [src-a1b2c3d4e5f60718293a4b5c6d7e8f90]
+
+  - id: q06
+    question: 露出時間は何に応じて決めるか
+    query: 露出時間は照度
+    expect_ids: [src-b2c3d4e5f60718293a4b5c6d7e8f9012]
+
+  - id: q07
+    question: 露出時間の式はどう書かれていたか
+    query: \frac{k}{E}
+    expect_ids: [src-b2c3d4e5f60718293a4b5c6d7e8f9012]
+    note: TeXが原文のまま索引に入っているかを見る
+
+  - id: q08
+    question: 照度に触れている記事はどれか
+    query: 照度
+    expect_ids: [src-b2c3d4e5f60718293a4b5c6d7e8f9012]
+    note: 2文字を超える短語。FTS5経路。
+
+  - id: q09
+    question: 解析に使う予定のライブラリは何か
+    query: pandas
+    expect_ids: [src-c3d4e5f60718293a4b5c6d7e8f901234]
+    note: 下書き(Published=No, Status=Draft)の記事。公開済みでなくても検索対象。
+
+  - id: q10
+    question: CSVの読み込みに使う関数は何か
+    query: read_csv
+    expect_ids: [src-c3d4e5f60718293a4b5c6d7e8f901234]
+    note: コードブロックとインラインコードが索引に残っているかを見る
+
+  - id: q11
+    question: 説明変数が多いときに試す手法は何か
+    query: elastic net
+    expect_ids: [src-d4e5f60718293a4b5c6d7e8f90123456]
+
+  - id: q12
+    question: ハイパーパラメータの選び方はどう書かれていたか
+    query: 交差検証
+    expect_ids: [src-d4e5f60718293a4b5c6d7e8f90123456]
+
+  - id: q13
+    question: 前処理で忘れてはいけないことは何か
+    query: 標準化を忘れない
+    expect_ids: [src-d4e5f60718293a4b5c6d7e8f90123456]
+
+  - id: q14
+    question: 灌水量の記録方法について決めたことはあるか
+    query: 灌水量
+    expect_ids: [src-e5f60718293a4b5c6d7e8f9012345678]
+
+  - id: q15
+    question: 平文で書かれた記事の二行目は何か
+    query: 二行目も平文
+    expect_ids: [src-e5f60718293a4b5c6d7e8f9012345678]
+    note: HTMLでない本文の改行が保たれているかを見る
+
+  - id: q16
+    question: 窒素固定は何に依存すると書かれていたか
+    query: 窒素固定は根圏
+    expect_ids: [src-f60718293a4b5c6d7e8f901234567890]
+
+  - id: q17
+    question: 土壌微生物についての読書メモはあるか
+    query: 土壌微生物
+    expect_ids: [src-f60718293a4b5c6d7e8f901234567890]
+
+  - id: q18
+    question: 窒素の施肥量の推奨値は記録されているか
+    query: 施肥量
+    expect: unknown
+    note: 窒素の話はあるが施肥量は記録にない。近い話題での誤検出を見る。
+
+  - id: q19
+    question: ぶどうの糖度についての記録はあるか
+    query: ぶどうの糖度
+    expect: unknown
+    note: 扱っていない作物。
+
+  - id: q20
+    question: kubernetesの運用手順は記録されているか
+    query: kubernetes
+    expect: unknown
+    note: 扱っていない領域。

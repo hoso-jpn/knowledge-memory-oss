@@ -1,0 +1,6 @@
+selection_id: work
+scope: work
+sources:
+- provider: notion
+  page_id: '00000000000000000000000000000003'
+  body_source: page

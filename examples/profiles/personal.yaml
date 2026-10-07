@@ -1,0 +1,6 @@
+selection_id: personal
+scope: personal
+sources:
+- provider: notion
+  page_id: '00000000000000000000000000000002'
+  body_source: page

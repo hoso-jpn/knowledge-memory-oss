@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.env
+.env.*
+!.env.example
+/vault/
+/private-data/
+.state/
+*.sqlite3
+*.sqlite3-*
+*.bundle
+
+# imported source data and raw stores stay outside this repository
+/raw/
+/imported/
+*_all.csv

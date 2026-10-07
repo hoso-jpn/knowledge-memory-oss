@@ -1,0 +1,14 @@
+﻿Name,URL,Date,Published,Status,Tags,Body
+架空例：圃場の表現型計測を自動化する,https://www.notion.so/demo/a1b2c3d4e5f60718293a4b5c6d7e8f90,2025-04-12,Yes,Done,"agri, phenotyping","<h2>背景</h2><p>架空の圃場で、草丈と葉色を週次で計測する手順を検討した。</p><blockquote><p>計測は同一時刻に行うこと。</p><p>曇天時は記録を分ける。</p></blockquote><h3>手順</h3><ol><li>基準点を設置する</li><li>ドローンを定高度で飛行させる</li></ol><p>詳細は<a href=""/posts/b2c3d4e5f60718293a4b5c6d7e8f9012"">撮影条件の記事</a>を参照。</p>"
+架空例：撮影条件と露出の決め方,https://www.notion.so/demo/b2c3d4e5f60718293a4b5c6d7e8f9012,2025-05-03,Yes,Done,"agri, imaging","<h2>露出</h2><p>露出時間は照度に反比例させる。</p><figure class=""equation""><math display=""block""><semantics><annotation encoding=""application/x-tex"">t = \frac{k}{E}</annotation></semantics></math></figure><p>ここで <span class=""katex""><span class=""katex-mathml""><math><semantics><annotation encoding=""application/x-tex"">E</annotation></semantics></math></span><span class=""katex-html"">E</span></span> は照度。</p>"
+架空例：解析スクリプトの雛形,https://www.notion.so/demo/c3d4e5f60718293a4b5c6d7e8f901234,2025-06-21,No,Draft,ai-eng,"<p>下書き。Pythonでの読み込み例。</p><pre><code>import pandas as pd
+
+df = pd.read_csv(""plots.csv"")
+print(df.head())
+</code></pre><p>関数 <code>read_csv()</code> の引数は後で詰める。</p>"
+架空例：elastic netによる収量予測の覚書,https://www.notion.so/demo/d4e5f60718293a4b5c6d7e8f90123456,2025-07-08,Yes,Done,"ai-eng, agri",<h2>要点</h2><p>説明変数が多い場合はelastic netを試す。</p><p>罰則項は $\alpha(\lambda\|w\|_1 + (1-\lambda)\|w\|_2^2)$ の形で書ける。</p><ul><li>交差検証で&alpha;を選ぶ</li><li>標準化を忘れない</li></ul>
+架空例：灌水量の記録方法についての決定,https://www.notion.so/demo/e5f60718293a4b5c6d7e8f9012345678,2025-08-30,No,In progress,agri,"一行目の平文。
+二行目も平文のまま。
+
+段落を空行で分ける。"
+架空例：読書メモ 土壌微生物と窒素,https://www.notion.so/demo/f60718293a4b5c6d7e8f901234567890,2025-09-14,Yes,Done,"agri, reading",<h2>引用</h2><blockquote><p>窒素固定は根圏の条件に強く依存する。</p></blockquote><p>出典は架空の総説。原著は未確認。</p>

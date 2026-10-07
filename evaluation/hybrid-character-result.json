@@ -1,0 +1,202 @@
+{
+  "index": {
+    "version": 1,
+    "source_signature": "029daa0e8d7a1c5f173a9b456325677cbf04acfe285d5bbcb8bdb9e5c8c7a768",
+    "scope": "demo",
+    "encoder": {
+      "backend": "character-ngram-v1",
+      "dimensions": 512,
+      "semantic": false
+    },
+    "chunk_chars": 256,
+    "overlap": 32,
+    "dimensions": 512,
+    "records": 16,
+    "chunks": 24,
+    "seconds": 0.01102210699900752,
+    "peak_rss_kib": 18432,
+    "gpu_required": false
+  },
+  "evaluation": {
+    "encoder": {
+      "backend": "character-ngram-v1",
+      "dimensions": 512,
+      "semantic": false
+    },
+    "python": "3.12.14",
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.39",
+    "threshold": 0.2,
+    "limit": 10,
+    "questions": 6,
+    "success": {
+      "literal": 3,
+      "hybrid": 4
+    },
+    "improvements": [
+      "id",
+      "natural"
+    ],
+    "regressions": [
+      "unknown"
+    ],
+    "peak_rss_kib": 20096,
+    "gpu_required": false,
+    "rows": [
+      {
+        "id": "exact",
+        "kind": "literal",
+        "results": {
+          "literal": {
+            "ids": [
+              "decision-model",
+              "note-conflict"
+            ],
+            "hit": true,
+            "reciprocal_rank": 1.0,
+            "false_hit": false
+          },
+          "hybrid": {
+            "ids": [
+              "decision-model",
+              "note-conflict"
+            ],
+            "hit": true,
+            "reciprocal_rank": 1.0,
+            "false_hit": false
+          }
+        },
+        "seconds": {
+          "literal": 0.001472500000090804,
+          "hybrid": 0.0068374629991012625
+        }
+      },
+      {
+        "id": "short",
+        "kind": "short",
+        "results": {
+          "literal": {
+            "ids": [
+              "decision-model",
+              "note-conflict"
+            ],
+            "hit": true,
+            "reciprocal_rank": 1.0,
+            "false_hit": false
+          },
+          "hybrid": {
+            "ids": [
+              "decision-model",
+              "note-conflict"
+            ],
+            "hit": true,
+            "reciprocal_rank": 1.0,
+            "false_hit": false
+          }
+        },
+        "seconds": {
+          "literal": 0.0013087179977446795,
+          "hybrid": 0.006625529000302777
+        }
+      },
+      {
+        "id": "id",
+        "kind": "id",
+        "results": {
+          "literal": {
+            "ids": [],
+            "hit": false,
+            "reciprocal_rank": 0,
+            "false_hit": false
+          },
+          "hybrid": {
+            "ids": [
+              "decision-model"
+            ],
+            "hit": true,
+            "reciprocal_rank": 1.0,
+            "false_hit": false
+          }
+        },
+        "seconds": {
+          "literal": 0.0012201869976706803,
+          "hybrid": 0.0064351170003646985
+        }
+      },
+      {
+        "id": "natural",
+        "kind": "natural",
+        "results": {
+          "literal": {
+            "ids": [],
+            "hit": false,
+            "reciprocal_rank": 0,
+            "false_hit": false
+          },
+          "hybrid": {
+            "ids": [
+              "decision-model",
+              "note-cycle-b",
+              "note-conflict"
+            ],
+            "hit": true,
+            "reciprocal_rank": 1.0,
+            "false_hit": false
+          }
+        },
+        "seconds": {
+          "literal": 0.0014423050015466288,
+          "hybrid": 0.006681271996058058
+        }
+      },
+      {
+        "id": "constraint",
+        "kind": "natural",
+        "results": {
+          "literal": {
+            "ids": [],
+            "hit": false,
+            "reciprocal_rank": 0,
+            "false_hit": false
+          },
+          "hybrid": {
+            "ids": [
+              "idea-threshold"
+            ],
+            "hit": false,
+            "reciprocal_rank": 0,
+            "false_hit": false
+          }
+        },
+        "seconds": {
+          "literal": 0.0012525040001492016,
+          "hybrid": 0.006491419997473713
+        }
+      },
+      {
+        "id": "unknown",
+        "kind": "unknown",
+        "results": {
+          "literal": {
+            "ids": [],
+            "hit": true,
+            "reciprocal_rank": 0,
+            "false_hit": false
+          },
+          "hybrid": {
+            "ids": [
+              "note-trailing",
+              "note-cycle"
+            ],
+            "hit": false,
+            "reciprocal_rank": 0,
+            "false_hit": true
+          }
+        },
+        "seconds": {
+          "literal": 0.0011969619954470545,
+          "hybrid": 0.0065171789974556305
+        }
+      }
+    ]
+  }
+}

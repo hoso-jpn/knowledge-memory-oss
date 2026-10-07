@@ -1,0 +1,11 @@
+version: 1
+body_source: page
+properties:
+  title: Title
+  domain: 分野
+  source_type: 種別
+  editorial_status: 整理状態
+  source_description: 出典
+  reference_url: 出典URL
+  document_date: 資料日
+  original_filename: 元ファイル
