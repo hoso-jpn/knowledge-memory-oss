@@ -23,6 +23,25 @@ MCP SDK clientを使うtestには `.[mcp]` が必要。全testはこのextraを�
 .venv/bin/km get --db .state/demo.sqlite3 --scope demo note-search-example
 ```
 
+## Package artifacts
+
+packagingやmodule構成を変えた場合は、wheel / sdistそのものも確認する（CIの `package` workflowと同じ）。
+`build` と `twine` は検査用toolで、runtime dependencyには入れない。uploadはしない。
+
+```bash
+rm -rf dist build src/*.egg-info
+python -m pip install build twine
+python -m build
+python -m twine check dist/*
+python scripts/verify_distribution.py contents dist
+python scripts/verify_distribution.py install dist/knowledge_memory-*.whl
+python scripts/verify_distribution.py install dist/knowledge_memory-*.tar.gz
+```
+
+`install` はcheckout外の一時venvへartifactだけを入れ、`src/` ではなくsite-packagesからimportされることと、
+console scriptとsynthetic vaultでの `km` smoke testを確認する。wheel / sdistに入れてよいfileは
+`scripts/verify_distribution.py` に明記している。
+
 ## Pull requests
 
 - 1 PR = 1つの明確な目的を基本とする
