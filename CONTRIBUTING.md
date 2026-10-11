@@ -1,6 +1,7 @@
 # Contributing
 
 Contributionを歓迎する。変更はIssueと小さなPRに結び付ける。
+今後の方向性と着手しやすい領域は[docs/roadmap.md](docs/roadmap.md)（英語）にまとめている。
 
 ## Development setup
 
