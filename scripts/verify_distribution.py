@@ -7,6 +7,7 @@
 
 `install` creates a fresh venv outside the checkout, installs only the given artifact and
 re-runs this script there as `smoke`. Standard library only; nothing is uploaded anywhere.
+CI runs it on Linux only; other platforms are not checked.
 """
 from __future__ import annotations
 
@@ -33,7 +34,9 @@ LICENSE_EXPRESSION = 'Apache-2.0'
 # dist-info files the wheel must carry; top_level.txt is a setuptools extra that may go away.
 WHEEL_INFO = {'METADATA', 'WHEEL', 'RECORD', 'entry_points.txt', 'licenses/LICENSE'}
 WHEEL_INFO_OPTIONAL = {'top_level.txt'}
-# A source distribution may carry tests, but not examples, docs, CI config, state or private data.
+# A source distribution carries setuptools' default tests/*.py as source, but not examples, docs,
+# CI config, state or private data. Those tests read examples/ and evaluation/, so they do not run
+# from an unpacked sdist on their own; the repository checkout is where the test suite runs.
 SDIST_REQUIRED = {'PKG-INFO', 'pyproject.toml', 'README.md', 'LICENSE'}
 SDIST_FILES = SDIST_REQUIRED | {'setup.cfg'}
 SDIST_EGG_INFO = {'PKG-INFO', 'SOURCES.txt', 'dependency_links.txt', 'entry_points.txt',
@@ -68,6 +71,19 @@ def modules():
             if '__pycache__' not in p.parts}
 
 
+def module_bytes(name):
+    return (ROOT / 'src' / name).read_bytes()
+
+
+def check_names(failures, label, names):
+    """Member names must be plain relative POSIX paths, each present once."""
+    unsafe = sorted(n for n in set(names) if n.startswith('/') or '\\' in n
+                    or any(part in ('', '.', '..') for part in n.rstrip('/').split('/')))
+    failures.check(not unsafe, f'{label} has absolute, backslash or dot-segment member names: {unsafe}')
+    duplicates = sorted({n for n in names if names.count(n) > 1})
+    failures.check(not duplicates, f'{label} has duplicate members: {duplicates}')
+
+
 def check_metadata(failures, label, text, meta):
     msg = email.parser.HeaderParser().parsestr(text)
     failures.check(tuple(map(int, msg['Metadata-Version'].split('.'))) >= (2, 4),
@@ -91,11 +107,14 @@ def check_wheel(failures, path, meta):
                    f'unexpected wheel name or tag: {path.name}')
     info = f'{stem}-{meta["version"]}.dist-info'
     with zipfile.ZipFile(path) as wheel:
+        check_names(failures, 'wheel', wheel.namelist())
         names = set(wheel.namelist())
         package = {n for n in names if not n.startswith(f'{info}/')}
         extra = package - modules()
         failures.check(not extra, f'wheel contains files outside the package sources: {sorted(extra)}')
         failures.check(not modules() - package, f'wheel misses modules: {sorted(modules() - package)}')
+        changed = sorted(n for n in package & modules() if wheel.read(n) != module_bytes(n))
+        failures.check(not changed, f'wheel modules differ from src: {changed}')
         infos = {n.removeprefix(f'{info}/') for n in names - package}
         failures.check(WHEEL_INFO <= infos, f'wheel misses metadata: {sorted(WHEEL_INFO - infos)}')
         failures.check(infos <= WHEEL_INFO | WHEEL_INFO_OPTIONAL,
@@ -110,6 +129,8 @@ def check_wheel(failures, path, meta):
             entry = configparser.ConfigParser(delimiters=('=',))
             entry.optionxform = str
             entry.read_string(wheel.read(f'{info}/entry_points.txt').decode())
+            failures.check(entry.sections() == ['console_scripts'],
+                           f'entry point groups other than console_scripts: {entry.sections()}')
             scripts = {k: v.strip() for k, v in entry['console_scripts'].items()} if entry.has_section('console_scripts') else {}
             failures.check(scripts == meta['scripts'], f'console scripts differ from pyproject: {scripts}')
 
@@ -120,6 +141,7 @@ def check_sdist(failures, path, meta):
     failures.check(path.name == f'{top}.tar.gz', f'unexpected sdist name: {path.name}')
     with tarfile.open(path) as sdist:
         members = sdist.getmembers()
+        check_names(failures, 'sdist', [m.name for m in members])
         failures.check(all(m.isfile() or m.isdir() for m in members), 'sdist contains links or special files')
         files = {m.name for m in members if m.isfile()}
         outside = {n for n in files if not n.startswith(f'{top}/')}
@@ -129,6 +151,9 @@ def check_sdist(failures, path, meta):
         egg = {n.removeprefix(f'src/{PACKAGE}.egg-info/') for n in rel if n.startswith(f'src/{PACKAGE}.egg-info/')}
         tests = {n for n in rel if n.startswith('tests/')}
         failures.check(src == modules(), f'sdist package sources differ: {sorted(src ^ modules())}')
+        changed = sorted(n for n in src & modules()
+                         if sdist.extractfile(f'{top}/src/{n}').read() != module_bytes(n))
+        failures.check(not changed, f'sdist modules differ from src: {changed}')
         failures.check(egg <= SDIST_EGG_INFO, f'unexpected egg-info files: {sorted(egg - SDIST_EGG_INFO)}')
         failures.check(all(Path(n).suffix == '.py' and '__pycache__' not in n for n in tests),
                        f'sdist tests/ contains non-source files: {sorted(n for n in tests if not n.endswith(".py"))}')
@@ -166,8 +191,9 @@ def install(args):
         tmp = Path(tmp)
         if tmp.is_relative_to(ROOT):
             raise SystemExit(f'temporary directory must be outside the checkout: {tmp}')
-        venv.create(tmp / 'venv', with_pip=True)
-        python = tmp / 'venv' / ('Scripts' if os.name == 'nt' else 'bin') / 'python'
+        # symlinks keep interpreters that are themselves symlinks (e.g. uv-managed) able to find their stdlib.
+        venv.create(tmp / 'venv', with_pip=True, symlinks=True)
+        python = tmp / 'venv' / 'bin' / 'python'
         env = {k: v for k, v in os.environ.items() if k not in ('PYTHONPATH', 'PYTHONHOME')}
         subprocess.run([python, '-m', 'pip', 'install', '--disable-pip-version-check', '--no-input',
                         str(artifact)], check=True, cwd=tmp, env=env)
