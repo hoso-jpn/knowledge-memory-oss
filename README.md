@@ -267,6 +267,7 @@ Maintainers
 
 v0.1, the first public release.
 Clean install, security/privacy and accurate documentation take priority over new features.
+Direction and contribution priorities: [docs/roadmap.md](docs/roadmap.md).
 
 ## License
 

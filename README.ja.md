@@ -261,6 +261,7 @@ Maintainers
 
 v0.1。最初の公開版である。
 機能追加よりも、clean install、security/privacy、documentationの正確さを優先している。
+今後の方向性とcontributionの優先領域: [docs/roadmap.md](docs/roadmap.md)（英語）
 
 ## License
 
