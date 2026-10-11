@@ -1,0 +1,49 @@
+name: package
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  # Build once: the wheel is pure Python (py3-none-any), so every supported Python installs the same files.
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - run: python scripts/verify_distribution.py contents dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+  install:
+    name: install ${{ matrix.artifact }} on ${{ matrix.python-version }}
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+        artifact: [whl, tar.gz]
+    steps:
+      # The checkout supplies only the verify script and the synthetic vault; the package comes from the artifact.
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: ${{ runner.temp }}/dist
+      - run: python scripts/verify_distribution.py install "$RUNNER_TEMP"/dist/*.${{ matrix.artifact }}
