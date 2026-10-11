@@ -52,6 +52,9 @@ console scriptとsynthetic vaultでの `km` smoke testを確認する。wheel / 
 - candidateを自動でactiveへ昇格させない
 - relevance scoreやmodel confidenceをverified truthと扱わない
 
+maintainerがPRをmergeする条件（独立review、head SHAを固定したmerge等）とrelease手順は
+[docs/releasing.md](docs/releasing.md)（英語）にまとめている。
+
 ## Privacy and test data
 
 Issue、PR、comment、commit message、test、fixture、evaluation結果へ以下を入れない。

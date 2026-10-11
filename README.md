@@ -259,6 +259,10 @@ Advanced / experimental
 - [Managed runtime](docs/managed-runtime.md) and [evidence retention](docs/sync-evidence-retention.md)
 - [Hybrid search](docs/hybrid-search.md) — opt-in search comparison and evaluation
 
+Maintainers
+
+- [Releasing and updating](docs/releasing.md) — merging changes, release checklist, tags and GitHub Releases
+
 ## Status
 
 v0.1, the first public release.
