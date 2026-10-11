@@ -34,7 +34,7 @@ These are the areas the maintainer expects to work on first.
 ### Packaging and distribution hardening
 
 Tighten the artifact checks added in #1 and prepare the metadata a package registry would
-need, without publishing anything yet. The open items are collected in #8: dependency metadata
+need, without publishing anything yet. The open items are collected in [#8](https://github.com/hoso-jpn/knowledge-memory-oss/issues/8): dependency metadata
 and RECORD checks, package long description, installs with the `[mcp]` and `[semantic]` extras,
 and macOS / Windows coverage. Publishing to PyPI would be a separate, explicit decision.
 
@@ -56,7 +56,8 @@ context for a project), each runnable without credentials and covered by a test.
 These need measurement or design before anyone commits to them.
 
 - **Larger-vault measurement.** `km-ops benchmark` currently measures synthetic vaults of
-  25 / 250 / 1000 records ([operations](operations.md#measurement)). Larger synthetic sizes and
+  25 / 250 / 1000 records, and `km-ops measure` measures an existing vault on its own machine
+  ([operations](operations.md#measurement)). Larger synthetic sizes and
   more realistic note-size distributions would show where full hashing on every query or index
   rebuilds become too slow, before changing either.
 - **Semantic / hybrid retrieval evaluation.** `km-hybrid` is opt-in and no pretrained model is
@@ -68,17 +69,20 @@ These need measurement or design before anyone commits to them.
   response limits) would help users, as long as a passing check is reported for that client and
   version only ([MCP](mcp.md)).
 - **Recovery and retention usability.** Backup, restore, recovery checks and sync-evidence
-  retention work but are documented for operators. Clearer messages, dry-run output and short
-  guides would make them easier to use correctly.
+  retention work but are documented for operators. Clearer messages, previews of what a restore
+  will change, and short guides would make them easier to use correctly.
 
-### Not planned without a separate design discussion
+## Not planned without a separate design discussion
 
-Changes like these would weaken a security or privacy boundary and are not on the roadmap. They
-would need their own Issue, a design and an explicit review first:
+Changes like these would weaken a security, privacy or data-integrity boundary and are not on the
+roadmap. They would need their own Issue, a design and an explicit review first:
 
 - promoting candidates to active automatically, or letting MCP tools write to the vault
+- silently rewriting source Markdown
 - letting the model choose the vault, database, scope or candidate access through tool arguments
-- sending vault content to cloud model endpoints by default (`km-inbox` accepts loopback only)
+- falling back from bounded MCP tools to unbounded reads
+- sending vault content to cloud model endpoints (`km-inbox` accepts loopback endpoints only, and
+  hybrid search loads embedding models from local files)
 - multiple writers or devices on one vault (see the requirements in
   [operations](operations.md#multiple-writersdevices-design-before-enabling))
 - treating `scope` as authentication or authorization
@@ -95,7 +99,7 @@ Good starting points that need no private data and little background:
   runs it.
 - **Benchmarks**: extend the synthetic measurement and report results with the environment that
   produced them; numbers from one machine do not predict another.
-- **Packaging**: the checklist in #8.
+- **Packaging**: the checklist in [#8](https://github.com/hoso-jpn/knowledge-memory-oss/issues/8).
 
 Issues labelled
 [`good first issue`](https://github.com/hoso-jpn/knowledge-memory-oss/labels/good%20first%20issue)
