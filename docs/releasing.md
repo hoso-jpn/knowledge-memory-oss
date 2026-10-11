@@ -57,14 +57,16 @@ Do these in order. Each step links to its details below.
 1. Merge the changes that belong in the release through section 1.
 2. Open a release Issue and draft the release notes ([section 5](#5-release-notes)) from the
    changes merged on `origin/main`. Keep the notes file outside the checkout.
-3. Open a version PR for that Issue that changes the version and the version text
-   ([section 4](#4-version)). Put the draft notes in its description so they are reviewed with it.
+3. Open a version PR that changes the version and the version text ([section 4](#4-version)).
+   Link the release Issue with `Refs #N`, not `Closes`, so it stays open until the release is
+   published. Put the draft notes in its description so they are reviewed with it.
 4. Merge the version PR and write down its merge commit SHA. This is the release commit.
 5. Check the release commit ([section 3](#3-checks-on-the-release-commit)).
 6. Finish the notes: regenerate the change list up to the release SHA and fill in the verified
-   environments from step 5.
+   environments from step 5. These changes are reviewed again when reading the draft in step 8.
 7. Tag exactly that SHA and push the tag ([section 6](#6-tag)).
 8. Create a draft GitHub Release from the tag, read it, then publish it ([section 7](#7-github-release)).
+   Close the release Issue.
 
 If anything fails along the way, see [Stop conditions](#stop-conditions) and
 [Rollback and recovery](#rollback-and-recovery).
@@ -122,17 +124,19 @@ README command that only works from a developer's checkout.
 ### Package artifacts
 
 The `package` workflow builds the wheel and sdist once and installs each into a clean venv on
-Python 3.11–3.13. To repeat it locally, inside the fresh clone of the release commit (see
-[CONTRIBUTING.md](../CONTRIBUTING.md#package-artifacts)):
+Python 3.11–3.13. To repeat it locally, run this once, inside one fresh clone of the release
+commit and with that clone's venv (see [CONTRIBUTING.md](../CONTRIBUTING.md#package-artifacts)).
+The wheel is pure Python, so one build is enough; `install` checks it with the Python that runs
+the script:
 
 ```bash
 rm -rf dist build src/*.egg-info
-python -m pip install build twine
-python -m build
-python -m twine check dist/*
-python scripts/verify_distribution.py contents dist
-python scripts/verify_distribution.py install dist/knowledge_memory-*.whl
-python scripts/verify_distribution.py install dist/knowledge_memory-*.tar.gz
+.venv/bin/python -m pip install build twine
+.venv/bin/python -m build
+.venv/bin/python -m twine check dist/*
+.venv/bin/python scripts/verify_distribution.py contents dist
+.venv/bin/python scripts/verify_distribution.py install dist/knowledge_memory-*.whl
+.venv/bin/python scripts/verify_distribution.py install dist/knowledge_memory-*.tar.gz
 ```
 
 Do not upload these files anywhere. A locally built sdist records your OS user name in its tar
@@ -209,10 +213,14 @@ meantime cannot end up in the release:
 git fetch origin
 SHA=<release SHA>                                   # merge commit of the version PR
 git show "$SHA:pyproject.toml" | grep '^version'    # must match the tag
-git merge-base --is-ancestor "$SHA" origin/main && echo "on main"
+git merge-base --is-ancestor "$SHA" origin/main || echo "NOT on main: stop"
 git tag -a v0.2.0 "$SHA" -m "knowledge-memory v0.2.0"
-git rev-parse 'v0.2.0^{commit}'                     # must print $SHA
-git push origin v0.2.0
+```
+
+Push only if the version matched, the commit is on `main` and the tag points at it:
+
+```bash
+test "$(git rev-parse 'v0.2.0^{commit}')" = "$SHA" && git push origin v0.2.0
 ```
 
 Use an annotated tag with the message `knowledge-memory vX.Y.Z`, as `v0.1.0` does. Push only the
