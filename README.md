@@ -6,11 +6,11 @@
 
 knowledge-memory gives AI agents a long-term memory without losing the **source, time,
 lifecycle state and correction history** of what it stores. Human approval is the boundary
-between proposed and accepted knowledge, and agents receive bounded, scope- and state-filtered
-results over MCP.
+between proposed and accepted knowledge, and agents receive scope- and state-filtered search
+results and contexts over MCP, with explicit limits.
 
 Markdown files are the source of truth. SQLite is only an index that can be rebuilt from them.
-Search and the MCP server need no GPU and no external LLM API.
+The default search and MCP paths need no GPU and no external LLM API.
 
 ## Why
 
@@ -42,7 +42,7 @@ and a person can check where a retrieved record came from, when, and in what sta
 
 - **Source-grounded** — active records carry at least one source reference; imported records carry their retrieval time
 - **Local-first** — the vault and the SQLite index live on the user's machine. Search, record retrieval and MCP do not connect to external services
-- **Rebuildable index** — the database is never the source of truth; it can be rebuilt from the vault
+- **Rebuildable index** — the SQLite index is not the original; it can be rebuilt from the vault
 - **Human-in-the-loop** — AI-generated records start as candidates
 - **Explicit lifecycle** — candidate / active / superseded / retracted
 - **Bounded context** — search results and task contexts have explicit limits; bounded MCP mode also limits each whole response

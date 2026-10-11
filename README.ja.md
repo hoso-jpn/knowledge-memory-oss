@@ -5,7 +5,7 @@
 > **Local-first, source-grounded memory infrastructure for AI agents.**
 
 AIに長期記憶を与えながら、**出典・時点・状態・訂正履歴**を失わず、
-人間による承認を境界に置くローカル知識基盤。AIへはscope・状態で絞った上限付きの結果をMCPで渡す。
+人間による承認を境界に置くローカル知識基盤。AIへはscope・状態で絞った検索結果とcontextを、明示的な上限付きでMCPから渡す。
 
 Markdownをsource of truthとし、SQLiteは再生成可能なindexとして扱う。
 検索とMCPの基本経路はGPUや外部LLM APIを必要としない。
@@ -40,7 +40,7 @@ Markdownをsource of truthとし、SQLiteは再生成可能なindexとして扱�
 
 - **Source-grounded** — active recordは1件以上のsource referenceを持ち、取り込んだrecordは取得時点を持つ
 - **Local-first** — vaultとSQLite indexは利用者のマシンに置く。検索・原文取得・MCPは外部サービスへ接続しない
-- **Rebuildable index** — DBを唯一の原本にしない
+- **Rebuildable index** — SQLite indexは原本ではなく、vaultから再生成できる
 - **Human-in-the-loop** — AI生成候補はcandidateから始める
 - **Explicit lifecycle** — candidate / active / superseded / retracted
 - **Bounded context** — 検索結果とtask contextに明示的な上限を持たせる。bounded modeのMCPは応答全体にも上限を持たせる
