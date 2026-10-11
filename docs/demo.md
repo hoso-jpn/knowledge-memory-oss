@@ -7,8 +7,10 @@ synthetic Markdown → validate → index → search / get → context → stale
 ```
 
 It needs no network access once installed, no credential, no GPU and no model download.
-Each step runs the real `km` CLI or the `km-mcp` server and checks the result, so a non-zero
-exit means the demo found a problem rather than just printing something different.
+Each step runs the installed package's CLI or MCP server (`python -m knowledge_memory` and
+`python -m knowledge_memory.mcp_server`, the same code as the `km` and `km-mcp` commands) and
+checks the result, so a non-zero exit means the demo found a problem rather than just printing
+something different. The commands are printed as `km ...` for readability.
 
 ## Run it
 
@@ -28,7 +30,8 @@ extra to install.
 
 The demo copies `examples/context-vault` into a new temporary directory outside the checkout
 (shown as `$DEMO`), writes the index and the generated context there, and removes the
-directory at the end. Nothing is written to the repository or to the fixture.
+directory at the end. Apart from Python's usual bytecode cache (`__pycache__`, ignored by Git),
+nothing is written to the repository or to the fixture.
 Pass `--keep` to keep the workspace and try the commands by hand; delete it yourself afterwards.
 
 The synthetic notes are written in Japanese, so the queries are too:
@@ -52,11 +55,11 @@ means "resume the yield-forecast review".
    budget. It quotes records with their sources rather than summarising them, and reports
    which records were dropped to fit the budget.
 7. **stale index** — the demo appends a line to a note in its copy of the vault. Search then
-   refuses to answer from the outdated index until `km index` is run again.
+   refuses with `vault changed after indexing; rebuild the index` until `km index` is run again.
 8. **MCP** — the demo starts `km-mcp` over stdio and connects with the official MCP Python SDK
    client: `initialize`, `tools/list`, `search_memory`, `get_memory`, and a call that tries to
    pass its own `scope`, which the server refuses. Vault, database and scope are fixed when
-   the server starts. The server process ends with the client session.
+   the server starts. The SDK client ends the server process when the session closes.
 
 ## What it does not show
 
@@ -65,4 +68,6 @@ means "resume the yield-forecast review".
   [Checking that an agent actually uses the server](mcp.md#checking-that-an-agent-actually-uses-the-server).
 - Notion import, sync, inbox review and operations commands. See the [README](../README.md#documentation).
 
-The demo is run by `tests/test_demo.py`, which is part of the normal test suite and of CI.
+The demo is run by `tests/test_demo.py`, which is part of the normal test suite and of CI. It
+also checks that nothing is left in the checkout, the working directory or the temporary
+directory.
