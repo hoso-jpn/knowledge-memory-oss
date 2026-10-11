@@ -9,7 +9,7 @@ lifecycle state and correction history** of what it stores. Human approval is th
 between proposed and accepted knowledge, and agents receive scope- and state-filtered search
 results and contexts over MCP, with explicit limits.
 
-Markdown files are the source of truth. SQLite is only an index that can be rebuilt from them.
+Markdown files are the source of truth. The SQLite search index can be rebuilt from them.
 The default search and MCP paths need no GPU and no external LLM API.
 
 ## Why

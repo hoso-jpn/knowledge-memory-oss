@@ -7,7 +7,7 @@
 AIに長期記憶を与えながら、**出典・時点・状態・訂正履歴**を失わず、
 人間による承認を境界に置くローカル知識基盤。AIへはscope・状態で絞った検索結果とcontextを、明示的な上限付きでMCPから渡す。
 
-Markdownをsource of truthとし、SQLiteは再生成可能なindexとして扱う。
+Markdownをsource of truthとし、SQLiteの検索indexは再生成可能なものとして扱う。
 検索とMCPの基本経路はGPUや外部LLM APIを必要としない。
 
 ## Why
