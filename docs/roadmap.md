@@ -22,10 +22,10 @@ Released in `v0.1.0`:
 Done on `main` since `v0.1.0`:
 
 - CI builds the wheel and sdist once and installs each into a clean venv on Python 3.11–3.13,
-  with a contents check of both artifacts (#1)
-- a five-minute end-to-end demo on synthetic data, covered by the test suite ([docs/demo.md](demo.md), #4)
-- an English-first README with a Japanese version (#3)
-- a maintainer guide for merging and releasing ([docs/releasing.md](releasing.md), #2)
+  with a contents check of both artifacts ([#1](https://github.com/hoso-jpn/knowledge-memory-oss/issues/1))
+- a five-minute end-to-end demo on synthetic data, covered by the test suite ([docs/demo.md](demo.md), [#4](https://github.com/hoso-jpn/knowledge-memory-oss/issues/4))
+- an English-first README with a Japanese version ([#3](https://github.com/hoso-jpn/knowledge-memory-oss/issues/3))
+- a maintainer guide for merging and releasing ([docs/releasing.md](releasing.md), [#2](https://github.com/hoso-jpn/knowledge-memory-oss/issues/2))
 
 ## Current priorities
 
@@ -33,8 +33,9 @@ These are the areas the maintainer expects to work on first.
 
 ### Packaging and distribution hardening
 
-Tighten the artifact checks added in #1 and prepare the metadata a package registry would
-need, without publishing anything yet. The open items are collected in [#8](https://github.com/hoso-jpn/knowledge-memory-oss/issues/8): dependency metadata
+Tighten the artifact checks in the `package` workflow and prepare the metadata a package registry would
+need, without publishing anything yet. The open items are collected in
+[#8](https://github.com/hoso-jpn/knowledge-memory-oss/issues/8): dependency metadata
 and RECORD checks, package long description, installs with the `[mcp]` and `[semantic]` extras,
 and macOS / Windows coverage. Publishing to PyPI would be a separate, explicit decision.
 
@@ -69,8 +70,9 @@ These need measurement or design before anyone commits to them.
   response limits) would help users, as long as a passing check is reported for that client and
   version only ([MCP](mcp.md)).
 - **Recovery and retention usability.** Backup, restore, recovery checks and sync-evidence
-  retention work but are documented for operators. Clearer messages, previews of what a restore
-  will change, and short guides would make them easier to use correctly.
+  retention work but are documented for operators. Clearer messages, previews of how a backup
+  archive differs from the current vault before switching to it, and short guides would make
+  them easier to use correctly.
 
 ## Not planned without a separate design discussion
 
@@ -81,8 +83,9 @@ roadmap. They would need their own Issue, a design and an explicit review first:
 - silently rewriting source Markdown
 - letting the model choose the vault, database, scope or candidate access through tool arguments
 - falling back from bounded MCP tools to unbounded reads
-- sending vault content to cloud model endpoints (`km-inbox` accepts loopback endpoints only, and
-  hybrid search loads embedding models from local files)
+- having this project's components send vault content to cloud model endpoints (`km-inbox`
+  accepts loopback endpoints only, and hybrid search loads embedding models from local files).
+  What an MCP client does with the results it receives is up to that client
 - multiple writers or devices on one vault (see the requirements in
   [operations](operations.md#multiple-writersdevices-design-before-enabling))
 - treating `scope` as authentication or authorization
