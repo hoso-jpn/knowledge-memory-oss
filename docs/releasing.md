@@ -55,13 +55,16 @@ history, issue numbers, hosts or tooling that are not public. Review it against
 Do these in order. Each step links to its details below.
 
 1. Merge the changes that belong in the release through section 1.
-2. Write the release notes ([section 5](#5-release-notes)) and keep the file outside the checkout.
-3. Open a version PR that changes the version and the version text ([section 4](#4-version)).
-   Put the draft release notes in its description so they are reviewed with it.
+2. Open a release Issue and draft the release notes ([section 5](#5-release-notes)) from the
+   changes merged on `origin/main`. Keep the notes file outside the checkout.
+3. Open a version PR for that Issue that changes the version and the version text
+   ([section 4](#4-version)). Put the draft notes in its description so they are reviewed with it.
 4. Merge the version PR and write down its merge commit SHA. This is the release commit.
 5. Check the release commit ([section 3](#3-checks-on-the-release-commit)).
-6. Tag exactly that SHA and push the tag ([section 6](#6-tag)).
-7. Create a draft GitHub Release from the tag, read it, then publish it ([section 7](#7-github-release)).
+6. Finish the notes: regenerate the change list up to the release SHA and fill in the verified
+   environments from step 5.
+7. Tag exactly that SHA and push the tag ([section 6](#6-tag)).
+8. Create a draft GitHub Release from the tag, read it, then publish it ([section 7](#7-github-release)).
 
 If anything fails along the way, see [Stop conditions](#stop-conditions) and
 [Rollback and recovery](#rollback-and-recovery).
@@ -110,14 +113,17 @@ python3.11 -m venv .venv          # repeat with python3.12 and python3.13 in fre
 .venv/bin/python examples/demo.py
 ```
 
-Then run the Quick start commands from the README as written. Delete the clone afterwards.
+Then run the Quick start commands from the README as written, and the package artifact check
+below in the same clone, so the artifacts come from the release commit. Delete the clone
+afterwards.
 CI already runs the tests on all three versions; this check catches what CI cannot, such as a
 README command that only works from a developer's checkout.
 
 ### Package artifacts
 
 The `package` workflow builds the wheel and sdist once and installs each into a clean venv on
-Python 3.11–3.13. To repeat it locally (see [CONTRIBUTING.md](../CONTRIBUTING.md#package-artifacts)):
+Python 3.11–3.13. To repeat it locally, inside the fresh clone of the release commit (see
+[CONTRIBUTING.md](../CONTRIBUTING.md#package-artifacts)):
 
 ```bash
 rm -rf dist build src/*.egg-info
@@ -155,10 +161,10 @@ The version PR (for example `chore: release 0.2.0` on a `chore/…` branch) chan
   - `README.md` and `README.ja.md`, section "Status";
   - `SECURITY.md`, section "Supported versions".
 
-Search for the old version to catch anything new:
+Search for the old version to catch anything new (for `0.1.0`: `-e '0\.1\.0' -e 'v0\.1'`):
 
 ```bash
-git grep -n -e '0\.1\.0' -e 'v0\.1' -- ':!docs/releasing.md'
+git grep -n -e '<old X\.Y\.Z>' -e 'v<old X\.Y>' -- ':!docs/releasing.md'
 ```
 
 Recorded results under `evaluation/` name the package version they were measured with. Leave
@@ -174,7 +180,8 @@ git log --oneline --first-parent v<previous>..<release SHA>
 
 The `v0.1.0` notes had a one-paragraph summary, **Highlights**, **Current scope**, **Getting
 started** (which also pointed to private vulnerability reporting) and **License**. Keep those and,
-from the second release on, add the sections marked *new*:
+from the second release on, add the sections marked *new*. The change list and verified
+environments are finished only after the release commit is checked (overview step 6):
 
 - one-paragraph summary of what knowledge-memory is;
 - **Changes** since the previous release, linking the PRs or Issues (*new*);
@@ -187,6 +194,7 @@ from the second release on, add the sections marked *new*:
   says the release notes will state (*new*);
 - **Getting started**: point to the README Quick start and the demo;
 - **Security**: report vulnerabilities through private vulnerability reporting (SECURITY.md);
+  in `v0.1.0` this was a sentence under Getting started (*split out*);
 - **License**: Apache-2.0.
 
 Do not claim quality on real data, platforms that CI does not run, or guarantees the README does
@@ -201,8 +209,9 @@ meantime cannot end up in the release:
 git fetch origin
 SHA=<release SHA>                                   # merge commit of the version PR
 git show "$SHA:pyproject.toml" | grep '^version'    # must match the tag
+git merge-base --is-ancestor "$SHA" origin/main && echo "on main"
 git tag -a v0.2.0 "$SHA" -m "knowledge-memory v0.2.0"
-git rev-parse 'v0.2.0^{commit}'                      # must print $SHA
+git rev-parse 'v0.2.0^{commit}'                     # must print $SHA
 git push origin v0.2.0
 ```
 
@@ -251,9 +260,11 @@ Tags and releases are copied as soon as someone fetches them, so fix forward:
 - **Tag created but not pushed**: delete it locally (`git tag -d vX.Y.Z`) and start again.
 - **Tag pushed, no published release yet**: do not move it. Leave the tag unused, fix through a
   PR and release the next PATCH version. If the tag must go (for example it points at a commit
-  with private data), delete it with `git push origin :refs/tags/vX.Y.Z`, say why in a public
-  Issue, and never reuse that version number.
-- **Draft release**: edit or delete the draft freely (`gh release delete vX.Y.Z` keeps the tag).
+  with private data), delete it with `git push origin :refs/tags/vX.Y.Z` and `git tag -d vX.Y.Z`,
+  say why in a public Issue, and never reuse that version number. Deleting the tag does not remove
+  the commit from `main`; for private data follow the secret bullet below.
+- **Draft release**: edit or delete the draft freely. `gh release delete vX.Y.Z` keeps the pushed
+  tag; then follow the previous bullet.
 - **Published release with a defect**: do not move or reuse the tag. Fix through a PR, release a
   new PATCH version, and edit the old release notes to point to it. Mark the old release as a
   pre-release or add a warning at the top if users should avoid it.
