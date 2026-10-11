@@ -1,49 +1,53 @@
 # knowledge-memory
 
+**English** | [日本語](README.ja.md)
+
 > **Local-first, source-grounded memory infrastructure for AI agents.**
 
-AIに長期記憶を与えながら、**出典・時点・状態・訂正履歴**を失わず、
-人間による承認を境界に置くローカル知識基盤。
+knowledge-memory gives AI agents a long-term memory without losing the **source, time,
+lifecycle state and correction history** of what it stores. Human approval is the boundary
+between proposed and accepted knowledge, and agents receive scope- and state-filtered search
+results and contexts over MCP, with explicit limits.
 
-Markdownをsource of truthとし、SQLiteは再生成可能なindexとして扱う。
-検索とMCPの基本経路はGPUや外部LLM APIを必要としない。
+Markdown files are the source of truth. The SQLite search index can be rebuilt from them.
+The default search and MCP paths need no GPU and no external LLM API.
 
 ## Why
 
-一般的な「AI memory」やRAGでは、検索された情報が次のように扱われやすい。
+In many "AI memory" and RAG setups, retrieved information tends to lose its context:
 
-- いつの情報か分からない
-- 何を根拠にしたか分からない
-- 古い判断と新しい判断が混ざる
-- AIが提案した内容が人間の確定事項へ混ざる
-- 一度indexへ入った情報の削除・失効境界が曖昧
-- private sourceとwork sourceが論理filterだけで混在する
+- it is unclear when the information dates from
+- what it was based on is unclear
+- old and new decisions get mixed together
+- what an AI proposed gets mixed with what a person confirmed
+- once something is indexed, it is unclear when deletion or expiry takes effect
+- private and work sources are separated only by a logical filter
 
-`knowledge-memory` は検索精度だけでなく、**provenance / lifecycle / bounded retrieval / human approval**
-を設計の中心に置く。
+knowledge-memory puts **provenance, lifecycle, bounded retrieval and human approval** at the
+center of the design, not only search accuracy.
 
-| 観点 | 一般的なRAG / vector store | Second Brain系のノートアプリ | knowledge-memory |
+| Aspect | Typical RAG / vector store | Second-brain note apps | knowledge-memory |
 | --- | --- | --- | --- |
-| 原本 | 埋め込み済みchunk | アプリ内のノート | Markdownファイル。indexは再生成可能 |
-| 出典・時点 | 任意のmetadata | 任意 | activeは出典必須。編集・取得・出来事・確認の時点を別項目として持つ |
-| AIの書き込み | 直接追加されやすい | 人が書く前提 | AI提案はcandidate。activeへの変更は人の明示操作 |
-| 古い・誤った記録 | 上書きや削除 | 人が整理 | superseded / retractedとして残し、通常検索から外す |
-| AIへの渡し方 | 上位k件 | 人がコピー | scope・状態で絞り、応答上限付きのMCPで返す |
-| 意味検索 | 中心 | アプリ依存 | 既定は字面検索（FTS5 trigram）。意味検索は任意の実験機能 |
+| Source of truth | Embedded chunks | Notes inside the app | Markdown files; the index can be rebuilt |
+| Source and time | Optional metadata | Optional | Active records require a source; edit, retrieval, event and verification times are separate fields |
+| AI writes | Often added directly | Written by people | AI proposals start as candidates; making a record active is an explicit human step |
+| Outdated or wrong records | Overwritten or deleted | Tidied up by hand | Kept as superseded / retracted and excluded from normal search |
+| Handing to an AI | Top-k results | Copy and paste | Filtered by scope and state, returned through MCP with result and context limits (whole-response limits in bounded mode) |
+| Semantic search | Central | Depends on the app | Default is literal search (FTS5 trigram); semantic search is an optional experiment |
 
-検索品質で汎用RAGに勝つことは目的にしていない。違いは、取得した記録が
-「どこから・いつ・どの状態で」来たかをAIと人が確認できることにある。
+Beating general-purpose RAG on retrieval quality is not a goal. The difference is that an AI
+and a person can check where a retrieved record came from, when, and in what state.
 
 ## Core principles
 
-- **Source-grounded** — active recordは1件以上のsource referenceを持ち、取り込んだrecordは取得時点を持つ
-- **Local-first** — vaultとSQLite indexは利用者のマシンに置く。検索・原文取得・MCPは外部サービスへ接続しない
-- **Rebuildable index** — DBを唯一の原本にしない
-- **Human-in-the-loop** — AI生成候補はcandidateから始める
+- **Source-grounded** — active records carry at least one source reference; imported records carry their retrieval time
+- **Local-first** — the vault and the SQLite index live on the user's machine. Search, record retrieval and MCP do not connect to external services
+- **Rebuildable index** — the SQLite index is not the original; it can be rebuilt from the vault
+- **Human-in-the-loop** — AI-generated records start as candidates
 - **Explicit lifecycle** — candidate / active / superseded / retracted
-- **Bounded context** — MCP responseとtask contextに明示的な上限を持たせる
-- **Fail closed** — stale indexや不完全取得を成功として扱わない
-- **Boundary aware** — personal/workはscopeだけでなくvault・DB・processを分けて運用する
+- **Bounded context** — search results and task contexts have explicit limits; bounded MCP mode also limits each whole response
+- **Fail closed** — a stale index or an incomplete fetch is not treated as success
+- **Boundary aware** — keep personal and work data in separate vaults, databases and processes, not only separate scopes
 
 ## Architecture
 
@@ -51,14 +55,14 @@ Markdownをsource of truthとし、SQLiteは再生成可能なindexとして扱�
 Notion / CSV / inbox text
           │
           ▼
-   raw snapshot（vault外）
+   raw snapshot (outside the vault)
           │
           ▼
 ┌──────── Markdown vault ────────┐
 │  candidate ──human review──► active
 │  active ──► superseded / retracted
 └────────────────────────────────┘
-          │  km index（再生成可能）
+          │  km index (rebuildable)
           ▼
     SQLite FTS5 index
        │        │
@@ -66,39 +70,40 @@ Notion / CSV / inbox text
       CLI   stdio MCP ──► AI agent
 ```
 
-candidateとactiveは同じvaultの中で `status` によって区別する。
-Notionが原本の場合も、snapshotと派生Markdownを区別する。
-SQLite indexはいつでもvaultから再生成できる。
+Candidates and active records live in the same vault and are told apart by `status`.
+When Notion is the original, the snapshot and the Markdown derived from it are kept apart.
+The SQLite index can be rebuilt from the vault at any time.
 
 ## What it does
 
-- YAML frontmatter validation（`km validate`）
-- SQLite FTS5 trigram search と3文字未満の短語のliteral search（`km search`）
-- state/scope aware search、stale-index detection
-- source-grounded record retrieval（`km get`）
-- task context generation（`km context`）
-- read-only stdio MCP server と応答上限付きのbounded mode（`km-mcp`）
-- Notion read-only fetch/import、CSV import（`km fetch-notion` / `km import-notion` / `km import-csv`）
-- explicit synchronization and availability state（`km-sync`）
-- candidate review workflow（`km-inbox`。既定は非LLMの抽出。任意でloopbackのローカルモデル）
-- backup / restore / recovery check / measurement（`km-ops`）
-- question-set evaluation（`km evaluate`）
+- YAML frontmatter validation (`km validate`)
+- SQLite FTS5 trigram search, plus literal search for terms shorter than 3 characters (`km search`)
+- state- and scope-aware search, stale-index detection
+- source-grounded record retrieval (`km get`)
+- task context generation (`km context`)
+- read-only stdio MCP server, with a bounded mode that enforces response limits (`km-mcp`)
+- read-only Notion fetch and import, CSV import (`km fetch-notion` / `km import-notion` / `km import-csv`)
+- explicit synchronization and availability state (`km-sync`)
+- candidate review workflow (`km-inbox`; non-LLM extraction by default, optionally a local model on loopback)
+- backup / restore / recovery check / measurement (`km-ops`)
+- question-set evaluation (`km evaluate`)
 
-運用者向けの補助（必要な場合だけ使う）：
+Operator tools, for when you need them:
 
-- profile境界の配備前検査（`km-profile`）
-- sync・index・MCPの直列化、状態、復元後の照合（`python -m knowledge_memory.runtime`）
-- 同期証跡の保持計画と明示的な削除（`km-retention`）
+- pre-deployment checks of profile boundaries (`km-profile`)
+- serialization of sync, index and MCP, with status and post-restore reconciliation (`python -m knowledge_memory.runtime`)
+- retention planning and explicit deletion of sync evidence (`km-retention`)
 
-実験的な機能：
+Experimental:
 
-- character n-gram / 任意の埋め込みモデルによるhybrid検索（`km-hybrid`、opt-in。既定の検索は字面一致のまま）
-- 評価用に取得量の上限を強制するMCP entry point（`km-eval-budget`）
+- hybrid search with character n-grams or an optional embedding model (`km-hybrid`, opt-in; default search stays literal)
+- an MCP entry point that enforces retrieval limits for evaluation (`km-eval-budget`)
 
 ## Quick start
 
-Python 3.11+ と、trigram tokenizerを含むSQLite FTS5（SQLite 3.34以降）が必要。
-`.[mcp]` のインストール時だけ依存パッケージを取得する。以下はrepository同梱の架空データだけを使う。
+Requires Python 3.11+ and SQLite FTS5 with the trigram tokenizer (SQLite 3.34 or later).
+Only the `pip install` step downloads packages. The commands below use
+only the synthetic data in this repository.
 
 ```bash
 python -m venv .venv
@@ -110,34 +115,38 @@ python -m venv .venv
 .venv/bin/km get --db .state/demo.sqlite3 --scope demo note-search-example
 ```
 
-validate → index → search / get → context → MCPを一続きで試すdemo（外部API・GPU・credential不要、
-一時directoryだけを使う）:
+The synthetic notes are written in Japanese; `育種` means "breeding".
+
+### Five-minute demo
+
+To run validate → index → search / get → context → MCP in one go (no external API, GPU or
+credential; everything happens in a temporary directory that is removed afterwards):
 
 ```bash
 .venv/bin/python examples/demo.py
 ```
 
-各stepの意味と前提は[docs/demo.md](docs/demo.md)を参照。
+See [docs/demo.md](docs/demo.md) for what each step shows and what it does not.
 
-test:
+### Tests
 
 ```bash
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-CIはPython 3.11 / 3.12 / 3.13を対象とする。
+CI runs on Python 3.11, 3.12 and 3.13.
 
 ## MCP
 
-stdio MCP serverを利用できる。
+A stdio MCP server is included.
 
-通常mode:
+Default mode:
 
 - `search_memory`
 - `get_memory`
 - `build_context`
 
-bounded mode:
+Bounded mode:
 
 - `search_memory_bounded`
 - `get_memory_chunk`
@@ -149,104 +158,111 @@ bounded mode:
   --bounded --response-max-chars 12000 --response-max-bytes 24000
 ```
 
-server process起動時にvault / DB / scopeを固定する。candidateの参照は起動時の
-`--include-candidates` でだけ許可し、モデルのtool引数では広げられない。
-任意file readやshell executionはmemory toolとして公開しない。
-bounded modeは旧tool名を広告せず、旧名による全文取得へfallbackしない。
-MCP clientへの登録方法はclientごとに異なる。
+The vault, database and scope are fixed when the server process starts. Candidates are
+visible only when the server is started with `--include-candidates`; tool arguments from the
+model cannot widen that. Arbitrary file reads and shell execution are not exposed as memory
+tools. Bounded mode does not advertise the default tool names and never falls back to
+full-text retrieval under those names. How to register the server differs by MCP client.
 
-MCPに接続できても、agentが自分から検索・原文取得を選ぶとは限らない。
-SDKによる接続確認と、実際のclientで検索→get→出典付き回答が起きるかの確認は別に行う。
-手順は[docs/mcp.md](docs/mcp.md)の「Checking that an agent actually uses the server」と
-[導入と受け入れ](docs/knowledge-acceptance.md)を参照。
+A working MCP connection does not mean an agent will choose to search and retrieve records on
+its own. Check the SDK connection and, separately, whether your client actually searches, retrieves
+the record and answers with sources. See "Checking that an agent actually uses the server" in
+[docs/mcp.md](docs/mcp.md) and the [acceptance guide](docs/knowledge-acceptance.md).
 
 ## Record model
 
-recordは少なくとも次を区別する。
+A record distinguishes at least:
 
 - stable ID
 - source
-- retrieval/edit/event/verification time
+- retrieval / edit / event / verification time
 - lifecycle status
 - claim kind
 - scope
 
-`active` は「通常検索で利用可能」という意味であり、「真実」と同義ではない。
+`active` means "used by normal search"; it does not mean "true".
 
-詳細: [docs/schema.md](docs/schema.md)
+Details: [docs/schema.md](docs/schema.md)
 
 ## Notion ingestion
 
-Notionへは書き込まない。呼び出すのは読み取り用のAPI（page・block・data sourceの取得とquery）だけである。
+Nothing is written to Notion. Only read APIs are called (retrieving pages, blocks and data
+sources, and querying data sources).
 
 ```text
 Notion
-  ↓  km fetch-notion（read-only API）
-raw snapshot（vault外）
+  ↓  km fetch-notion (read-only API)
+raw snapshot (outside the vault)
   ↓  km import-notion / km-sync
-candidate Markdown（vault内）
+candidate Markdown (inside the vault)
   ↓  km index
-search index（candidateは既定で検索対象外。--include-candidatesで明示利用）
+search index (candidates are excluded by default; use --include-candidates explicitly)
   ↓
-human review（activeへの変更は人の明示操作）
+human review (making a record active is an explicit human step)
 ```
 
-import処理は不完全なpaginationや矛盾したcursorを成功扱いしない。
-取得できなくなった資料は、原文を残したまま利用保留にして検索から外す。
-credential、snapshot、実vaultはrepository外に保存する。
+Imports do not treat incomplete pagination or inconsistent cursors as success.
+Material that can no longer be fetched keeps its original text but is put on hold and removed
+from search. Credentials, snapshots and real vaults are stored outside this repository.
 
 ## What it does not guarantee
 
-- source contentの真偽を自動検証しない
-- `scope` はauthentication / authorizationではない
-- search scoreはconfidenceではない
-- 0 hitsは「情報が存在しない」ことの証明ではない
-- MCP接続だけでagentが必ずmemoryを使うことを保証しない
-- 取得した本文の中の命令をagentが実行しないことは、server側では保証できない。client側でdataとして扱う
-- multi-user distributed databaseを目的としていない。単一利用者・小規模vaultを想定する
-- private vaultそのものをGitHubへ保存する仕組みではない
+- It does not verify whether source content is true
+- `scope` is not authentication or authorization
+- A search score is not a confidence value
+- Zero hits do not prove that the information does not exist
+- An MCP connection alone does not guarantee that an agent will use the memory
+- The server cannot guarantee that an agent will not follow instructions contained in retrieved text; the client must treat it as data
+- It is not a multi-user distributed database. It is designed for a single user and small vaults
+- It is not a way to store a private vault on GitHub
 
 ## Verification status
 
-- 自動testとCIはsynthetic fixtureと公式MCP Python SDKのstdio clientで行う
-- repository内の評価結果はsynthetic corpusに対するもの。実データでの検索・回答品質は示していない
-- Notion取り込みの大量データ（API上限10,000件超）の分割取得は未実装
-- `km-inbox` のローカルモデル利用、hybrid検索の埋め込みモデルは、特定モデルでの品質を保証しない
+- Automated tests and CI use synthetic fixtures and the official MCP Python SDK stdio client
+- The evaluation results in this repository are for a synthetic corpus. They say nothing about search or answer quality on real data
+- Split retrieval for very large Notion data sources (over the 10,000-item API limit) is not implemented
+- Local-model use in `km-inbox` and embedding models in hybrid search come with no quality guarantee for any particular model
 
 ## Repository data policy
 
-このrepositoryにはsynthetic fixtureだけを含める。
-private vault、imported articles、raw snapshot、credential、work data、実Notion ID、
-private評価の質問・結果は含めない。
+This repository contains synthetic fixtures only. It does not contain private vaults, imported
+articles, raw snapshots, credentials, work data, real Notion IDs, or private evaluation
+questions and results.
 
-報告と貢献のルール: [SECURITY.md](SECURITY.md)、[CONTRIBUTING.md](CONTRIBUTING.md)
+Reporting and contribution rules: [SECURITY.md](SECURITY.md), [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Documentation
 
+Several documents under `docs/` are still written in Japanese or mix Japanese and English.
+
+Getting started
+
+- [Five-minute demo](docs/demo.md) — the main path on synthetic data
+
 Core design
 
-- [Architecture](docs/architecture.md) — 採用した設計判断と機能の境界
-- [Record schema](docs/schema.md) — frontmatter、状態、出典と時点
-- [MCP](docs/mcp.md) — tool契約、bounded mode、agentの利用確認
+- [Architecture](docs/architecture.md) — design decisions and functional boundaries
+- [Record schema](docs/schema.md) — frontmatter, states, sources and times
+- [MCP](docs/mcp.md) — tool contract, bounded mode, checking agent usage
 
 Ingestion and operations
 
-- [Notion import settings](docs/knowledge-import.md) と [conversion](docs/notion-conversion.md)
-- [Synchronization](docs/sync.md) と [data source sync](docs/data-source-sync.md)
-- [Acceptance](docs/knowledge-acceptance.md) — 導入後に確認すること
-- [Operations](docs/operations.md) — backup、restore、復旧確認、測定
-- [Inbox review](docs/inbox-review.md) — AI提案と人の承認
+- [Notion import settings](docs/knowledge-import.md) and [conversion](docs/notion-conversion.md)
+- [Synchronization](docs/sync.md) and [data source sync](docs/data-source-sync.md)
+- [Acceptance](docs/knowledge-acceptance.md) — what to check after setting it up
+- [Operations](docs/operations.md) — backup, restore, recovery checks, measurement
+- [Inbox review](docs/inbox-review.md) — AI proposals and human approval
 
 Advanced / experimental
 
-- [Profile boundaries](docs/profile-boundaries.md) — 個人・業務・公開用の分離
-- [Managed runtime](docs/managed-runtime.md) と [evidence retention](docs/sync-evidence-retention.md)
-- [Hybrid search](docs/hybrid-search.md) — opt-inの検索比較と評価方法
+- [Profile boundaries](docs/profile-boundaries.md) — keeping personal, work and public sources apart
+- [Managed runtime](docs/managed-runtime.md) and [evidence retention](docs/sync-evidence-retention.md)
+- [Hybrid search](docs/hybrid-search.md) — opt-in search comparison and evaluation
 
 ## Status
 
-v0.1。最初の公開版である。
-機能追加よりも、clean install、security/privacy、documentationの正確さを優先している。
+v0.1, the first public release.
+Clean install, security/privacy and accurate documentation take priority over new features.
 
 ## License
 
