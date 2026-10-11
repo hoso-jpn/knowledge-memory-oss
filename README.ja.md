@@ -5,7 +5,7 @@
 > **Local-first, source-grounded memory infrastructure for AI agents.**
 
 AIに長期記憶を与えながら、**出典・時点・状態・訂正履歴**を失わず、
-人間による承認を境界に置くローカル知識基盤。
+人間による承認を境界に置くローカル知識基盤。AIへはscope・状態で絞った上限付きの結果をMCPで渡す。
 
 Markdownをsource of truthとし、SQLiteは再生成可能なindexとして扱う。
 検索とMCPの基本経路はGPUや外部LLM APIを必要としない。
@@ -30,7 +30,7 @@ Markdownをsource of truthとし、SQLiteは再生成可能なindexとして扱�
 | 出典・時点 | 任意のmetadata | 任意 | activeは出典必須。編集・取得・出来事・確認の時点を別項目として持つ |
 | AIの書き込み | 直接追加されやすい | 人が書く前提 | AI提案はcandidate。activeへの変更は人の明示操作 |
 | 古い・誤った記録 | 上書きや削除 | 人が整理 | superseded / retractedとして残し、通常検索から外す |
-| AIへの渡し方 | 上位k件 | 人がコピー | scope・状態で絞り、応答上限付きのMCPで返す |
+| AIへの渡し方 | 上位k件 | 人がコピー | scope・状態で絞り、件数・contextの上限付きでMCPから返す（bounded modeでは応答全体にも上限） |
 | 意味検索 | 中心 | アプリ依存 | 既定は字面検索（FTS5 trigram）。意味検索は任意の実験機能 |
 
 検索品質で汎用RAGに勝つことは目的にしていない。違いは、取得した記録が
@@ -43,7 +43,7 @@ Markdownをsource of truthとし、SQLiteは再生成可能なindexとして扱�
 - **Rebuildable index** — DBを唯一の原本にしない
 - **Human-in-the-loop** — AI生成候補はcandidateから始める
 - **Explicit lifecycle** — candidate / active / superseded / retracted
-- **Bounded context** — MCP responseとtask contextに明示的な上限を持たせる
+- **Bounded context** — 検索結果とtask contextに明示的な上限を持たせる。bounded modeのMCPは応答全体にも上限を持たせる
 - **Fail closed** — stale indexや不完全取得を成功として扱わない
 - **Boundary aware** — personal/workはscopeだけでなくvault・DB・processを分けて運用する
 

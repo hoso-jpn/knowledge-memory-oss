@@ -4,9 +4,10 @@
 
 > **Local-first, source-grounded memory infrastructure for AI agents.**
 
-knowledge-memory gives AI agents a long-term memory that keeps **source, time, lifecycle
-state and correction history** attached to every record, and puts human approval at the
-boundary between proposed and accepted knowledge.
+knowledge-memory gives AI agents a long-term memory without losing the **source, time,
+lifecycle state and correction history** of what it stores. Human approval is the boundary
+between proposed and accepted knowledge, and agents receive bounded, scope- and state-filtered
+results over MCP.
 
 Markdown files are the source of truth. SQLite is only an index that can be rebuilt from them.
 Search and the MCP server need no GPU and no external LLM API.
@@ -15,11 +16,11 @@ Search and the MCP server need no GPU and no external LLM API.
 
 In many "AI memory" and RAG setups, retrieved information tends to lose its context:
 
-- when it was true is unclear
+- it is unclear when the information dates from
 - what it was based on is unclear
 - old and new decisions get mixed together
 - what an AI proposed gets mixed with what a person confirmed
-- once something is indexed, where its deletion or expiry takes effect is unclear
+- once something is indexed, it is unclear when deletion or expiry takes effect
 - private and work sources are separated only by a logical filter
 
 knowledge-memory puts **provenance, lifecycle, bounded retrieval and human approval** at the
@@ -27,11 +28,11 @@ center of the design, not only search accuracy.
 
 | Aspect | Typical RAG / vector store | Second-brain note apps | knowledge-memory |
 | --- | --- | --- | --- |
-| Original | Embedded chunks | Notes inside the app | Markdown files; the index can be rebuilt |
+| Source of truth | Embedded chunks | Notes inside the app | Markdown files; the index can be rebuilt |
 | Source and time | Optional metadata | Optional | Active records require a source; edit, retrieval, event and verification times are separate fields |
 | AI writes | Often added directly | Written by people | AI proposals start as candidates; making a record active is an explicit human step |
 | Outdated or wrong records | Overwritten or deleted | Tidied up by hand | Kept as superseded / retracted and excluded from normal search |
-| Handing to an AI | Top-k results | Copy and paste | Filtered by scope and state, returned through MCP with response limits |
+| Handing to an AI | Top-k results | Copy and paste | Filtered by scope and state, returned through MCP with result and context limits (whole-response limits in bounded mode) |
 | Semantic search | Central | Depends on the app | Default is literal search (FTS5 trigram); semantic search is an optional experiment |
 
 Beating general-purpose RAG on retrieval quality is not a goal. The difference is that an AI
@@ -41,12 +42,12 @@ and a person can check where a retrieved record came from, when, and in what sta
 
 - **Source-grounded** — active records carry at least one source reference; imported records carry their retrieval time
 - **Local-first** — the vault and the SQLite index live on the user's machine. Search, record retrieval and MCP do not connect to external services
-- **Rebuildable index** — the database is never the only copy
+- **Rebuildable index** — the database is never the source of truth; it can be rebuilt from the vault
 - **Human-in-the-loop** — AI-generated records start as candidates
 - **Explicit lifecycle** — candidate / active / superseded / retracted
-- **Bounded context** — MCP responses and task contexts have explicit size limits
+- **Bounded context** — search results and task contexts have explicit limits; bounded MCP mode also limits each whole response
 - **Fail closed** — a stale index or an incomplete fetch is not treated as success
-- **Boundary aware** — personal and work data are separated by vault, database and process, not only by scope
+- **Boundary aware** — keep personal and work data in separate vaults, databases and processes, not only separate scopes
 
 ## Architecture
 
@@ -114,7 +115,7 @@ python -m venv .venv
 .venv/bin/km get --db .state/demo.sqlite3 --scope demo note-search-example
 ```
 
-The synthetic notes are written in Japanese; `育種` means "plant breeding".
+The synthetic notes are written in Japanese; `育種` means "breeding".
 
 ### Five-minute demo
 
@@ -160,12 +161,12 @@ Bounded mode:
 The vault, database and scope are fixed when the server process starts. Candidates are
 visible only when the server is started with `--include-candidates`; tool arguments from the
 model cannot widen that. Arbitrary file reads and shell execution are not exposed as memory
-tools. Bounded mode does not advertise the default tool names and never falls back to a
+tools. Bounded mode does not advertise the default tool names and never falls back to
 full-text retrieval under those names. How to register the server differs by MCP client.
 
 A working MCP connection does not mean an agent will choose to search and retrieve records on
-its own. Check the SDK connection and, separately, whether your actual client does search →
-get → an answer with sources. See "Checking that an agent actually uses the server" in
+its own. Check the SDK connection and, separately, whether your client actually searches, retrieves
+the record and answers with sources. See "Checking that an agent actually uses the server" in
 [docs/mcp.md](docs/mcp.md) and the [acceptance guide](docs/knowledge-acceptance.md).
 
 ## Record model
@@ -209,7 +210,7 @@ from search. Credentials, snapshots and real vaults are stored outside this repo
 - It does not verify whether source content is true
 - `scope` is not authentication or authorization
 - A search score is not a confidence value
-- 0 hits does not prove that the information does not exist
+- Zero hits do not prove that the information does not exist
 - An MCP connection alone does not guarantee that an agent will use the memory
 - The server cannot guarantee that an agent will not follow instructions contained in retrieved text; the client must treat it as data
 - It is not a multi-user distributed database. It is designed for a single user and small vaults
