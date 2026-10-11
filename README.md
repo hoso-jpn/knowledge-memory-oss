@@ -110,6 +110,15 @@ python -m venv .venv
 .venv/bin/km get --db .state/demo.sqlite3 --scope demo note-search-example
 ```
 
+validate → index → search / get → context → MCPを一続きで試すdemo（外部API・GPU・credential不要、
+一時directoryだけを使う）:
+
+```bash
+.venv/bin/python examples/demo.py
+```
+
+各stepの意味と前提は[docs/demo.md](docs/demo.md)を参照。
+
 test:
 
 ```bash
