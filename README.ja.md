@@ -253,6 +253,10 @@ Advanced / experimental
 - [Managed runtime](docs/managed-runtime.md) と [evidence retention](docs/sync-evidence-retention.md)
 - [Hybrid search](docs/hybrid-search.md) — opt-inの検索比較と評価方法
 
+Maintainers
+
+- [Releasing and updating](docs/releasing.md) — 変更のmerge、release前の確認、tagとGitHub Release（英語）
+
 ## Status
 
 v0.1。最初の公開版である。
