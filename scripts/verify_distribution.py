@@ -398,12 +398,25 @@ def run(failures, command, cwd, expect=None):
     return result.stdout
 
 
+def installed_source_matches(installed, source, platform=None):
+    """Compare Python source bytes, allowing only Git's CRLF checkout translation on Windows."""
+    if platform is None:
+        platform = os.name
+    if platform == 'nt':
+        installed = installed.replace(b'\r\n', b'\n')
+        source = source.replace(b'\r\n', b'\n')
+    return installed == source
+
+
 def check_installed_modules(failures, package_dir):
-    """The installed package holds exactly the src/ modules, byte for byte, whether from wheel or sdist."""
+    """The installed package holds exactly the src/ modules; Windows ignores checkout CRLF translation."""
     installed = {f'{PACKAGE}/{p.relative_to(package_dir).as_posix()}'
                  for p in package_dir.rglob('*.py') if '__pycache__' not in p.parts}
     failures.check(installed == modules(), f'installed module set differs from src: {sorted(installed ^ modules())}')
-    changed = sorted(n for n in installed & modules() if (package_dir.parent / n).read_bytes() != module_bytes(n))
+    changed = sorted(
+        n for n in installed & modules()
+        if not installed_source_matches((package_dir.parent / n).read_bytes(), module_bytes(n))
+    )
     failures.check(not changed, f'installed modules differ from src: {changed}')
 
 
