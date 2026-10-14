@@ -16,6 +16,17 @@ from .notion_config import load_config
 from .notion_import import describe, import_snapshot, load_snapshot
 
 
+def json_for_stream(value, stream):
+    """JSON text that remains writable even on legacy Windows console encodings."""
+    text = json.dumps(value, ensure_ascii=False, indent=2)
+    encoding = getattr(stream, "encoding", None) or "utf-8"
+    try:
+        text.encode(encoding)
+        return text
+    except (UnicodeEncodeError, LookupError):
+        return json.dumps(value, ensure_ascii=True, indent=2)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="km")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -134,8 +145,8 @@ def main(argv=None):
                 result = search_notes(args.db, args.query, args.scope, args.limit, **options)
             else:
                 result = get_note(args.db, args.id, args.scope, **options)
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(json_for_stream(result, sys.stdout))
         return 0
     except (MemoryError, OSError, sqlite3.Error) as exc:
-        print(json.dumps({"error": str(exc)}, ensure_ascii=False), file=sys.stderr)
+        print(json_for_stream({"error": str(exc)}, sys.stderr), file=sys.stderr)
         return 2
