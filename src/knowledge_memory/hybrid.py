@@ -8,7 +8,10 @@ import json
 import math
 import os
 import platform
-import resource
+try:
+    import resource
+except ImportError:  # Windows has no resource module.
+    resource = None
 import sqlite3
 import sys
 import tempfile
@@ -24,6 +27,13 @@ CHUNK_CHARS, OVERLAP = 256, 32
 
 def canonical(value):
     return json.dumps(value, sort_keys=True, ensure_ascii=False)
+
+
+def peak_rss_kib(resource_module=resource):
+    """Best-effort peak RSS; unavailable on platforms without the resource module."""
+    if resource_module is None:
+        return None
+    return resource_module.getrusage(resource_module.RUSAGE_SELF).ru_maxrss
 
 
 def signature(notes):
@@ -127,7 +137,7 @@ def build_vectors(database: Path, vectors: Path, scope: str, encoder):
     finally:
         Path(name).unlink(missing_ok=True)
     return {**header, 'records': len(notes), 'chunks': len(entries),
-            'seconds': time.perf_counter() - started, 'peak_rss_kib': resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+            'seconds': time.perf_counter() - started, 'peak_rss_kib': peak_rss_kib(),
             'gpu_required': False}
 
 
@@ -202,7 +212,7 @@ def compare(database, vectors, scope, questions, encoder, include_candidates=Fal
             'success': {m: sum(r['results'][m]['hit'] for r in rows) for m in ('literal', 'hybrid')},
             'improvements': [r['id'] for r in rows if not r['results']['literal']['hit'] and r['results']['hybrid']['hit']],
             'regressions': [r['id'] for r in rows if r['results']['literal']['hit'] and not r['results']['hybrid']['hit']],
-            'peak_rss_kib': resource.getrusage(resource.RUSAGE_SELF).ru_maxrss, 'gpu_required': False,
+            'peak_rss_kib': peak_rss_kib(), 'gpu_required': False,
             'rows': rows}
 
 
