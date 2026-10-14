@@ -276,6 +276,25 @@ class VerifyDistributionTests(unittest.TestCase):
         self.assertEqual(raised.exception.code, 1)
 
 
+    def test_artifact_pattern_must_resolve_exactly_once(self):
+        first = Path(self.temp.name) / 'one.whl'
+        first.write_bytes(b'x')
+        self.assertEqual(self.verify.artifact_path(str(first)), first.resolve())
+        second = Path(self.temp.name) / 'two.whl'
+        second.write_bytes(b'y')
+        with self.assertRaises(SystemExit):
+            self.verify.artifact_path(str(Path(self.temp.name) / '*.whl'))
+        with self.assertRaises(SystemExit):
+            self.verify.artifact_path(str(Path(self.temp.name) / '*.tar.gz'))
+
+    def test_console_script_uses_platform_launcher_candidates(self):
+        bindir = Path(self.temp.name) / 'bin'
+        bindir.mkdir()
+        plain = bindir / 'km'
+        plain.write_text('', encoding='utf-8')
+        self.assertEqual(self.verify.console_script(bindir, 'km'), plain)
+
+
 @unittest.skipUnless(SCRIPT.is_file(), 'the workflows ship with the source checkout, not the sdist')
 class WorkflowHygieneTests(unittest.TestCase):
     def test_workflows_are_read_only_bounded_and_drop_checkout_credentials(self):
@@ -292,6 +311,23 @@ class WorkflowHygieneTests(unittest.TestCase):
                     for step in job['steps']:
                         if step.get('uses', '').startswith('actions/checkout@'):
                             self.assertIs(step.get('with', {}).get('persist-credentials'), False, name)
+
+
+    def test_github_actions_are_pinned_to_commit_shas(self):
+        import re
+        import yaml
+        for path in sorted((ROOT / '.github/workflows').glob('*.yml')):
+            workflow = yaml.safe_load(path.read_text(encoding='utf-8'))
+            for job in workflow['jobs'].values():
+                for step in job['steps']:
+                    uses = step.get('uses', '')
+                    if uses.startswith('actions/'):
+                        ref = uses.rsplit('@', 1)[-1].split()[0]
+                        self.assertRegex(ref, re.compile(r'^[0-9a-f]{40}
+
+if __name__ == '__main__':
+    unittest.main()
+), uses)
 
 
 if __name__ == '__main__':
