@@ -295,6 +295,12 @@ class VerifyDistributionTests(unittest.TestCase):
         self.assertEqual(self.verify.console_script(bindir, 'km'), plain)
 
 
+    def test_windows_installed_source_comparison_ignores_only_crlf_translation(self):
+        self.assertTrue(self.verify.installed_source_matches(b'a\r\nb\r\n', b'a\nb\n', platform='nt'))
+        self.assertFalse(self.verify.installed_source_matches(b'a\r\nb\r\n', b'a\nb changed\n', platform='nt'))
+        self.assertFalse(self.verify.installed_source_matches(b'a\r\nb\r\n', b'a\nb\n', platform='posix'))
+
+
 @unittest.skipUnless(SCRIPT.is_file(), 'the workflows ship with the source checkout, not the sdist')
 class WorkflowHygieneTests(unittest.TestCase):
     def test_workflows_are_read_only_bounded_and_drop_checkout_credentials(self):
