@@ -8,6 +8,7 @@ from pathlib import Path
 
 import yaml
 
+from knowledge_memory.cli import json_for_stream
 from knowledge_memory.core import MemoryError, build_index, get_note, load_vault, search_notes
 
 
@@ -157,6 +158,15 @@ class MemoryTests(unittest.TestCase):
                                     ("x", "personal", 51), ("x" * 513, "personal", 10)]:
             with self.subTest(query=query, scope=scope, limit=limit), self.assertRaises(MemoryError):
                 search_notes(self.db, query, scope, limit)
+
+    def test_cli_json_falls_back_to_ascii_escapes_for_legacy_stream_encoding(self):
+        class Stream:
+            encoding = "cp1252"
+
+        value = {"query": "育種"}
+        text = json_for_stream(value, Stream())
+        self.assertNotIn("育種", text)
+        self.assertEqual(json.loads(text), value)
 
     def test_cli_json_and_nonzero_error(self):
         command = [sys.executable, "-m", "knowledge_memory", "search", "--db", str(self.db),
