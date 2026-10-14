@@ -2,30 +2,32 @@ name: package
 on: [push, pull_request]
 permissions:
   contents: read
+
 jobs:
   # Build once: the wheel is pure Python (py3-none-any), so every supported Python installs the same files.
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.13'
-      - run: python -m pip install build twine
+      - run: python -m pip install build==1.6.1 twine==7.0.0
       - run: python -m build
-      - run: python -m twine check dist/*
+      - run: python -m twine check --strict dist/*
       - run: python scripts/verify_distribution.py contents dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: dist
           path: dist/
           if-no-files-found: error
           retention-days: 7
+
   install:
-    name: install ${{ matrix.artifact }} on ${{ matrix.python-version }}
+    name: install ${{ matrix.artifact }} on Python ${{ matrix.python-version }} / Linux
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -35,15 +37,59 @@ jobs:
         python-version: ['3.11', '3.12', '3.13']
         artifact: [whl, tar.gz]
     steps:
-      # The checkout supplies only the verify script and the synthetic vault; the package comes from the artifact.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: dist
           path: ${{ runner.temp }}/dist
-      - run: python scripts/verify_distribution.py install "$RUNNER_TEMP"/dist/*.${{ matrix.artifact }}
+      - run: python scripts/verify_distribution.py install "${{ runner.temp }}/dist/*.${{ matrix.artifact }}"
+
+  cross-platform:
+    name: install ${{ matrix.artifact }} on ${{ matrix.os }} / Python 3.13
+    needs: build
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+        artifact: [whl, tar.gz]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dist
+          path: ${{ runner.temp }}/dist
+      - run: python scripts/verify_distribution.py install "${{ runner.temp }}/dist/*.${{ matrix.artifact }}"
+
+  extras:
+    name: install wheel[${{ matrix.extra }}] on Linux / Python 3.13
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        extra: [mcp, semantic]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dist
+          path: ${{ runner.temp }}/dist
+      - run: python scripts/verify_distribution.py install "${{ runner.temp }}/dist/*.whl" --extra "${{ matrix.extra }}"
