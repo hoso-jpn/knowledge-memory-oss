@@ -387,11 +387,17 @@ def install(args):
         raise SystemExit(result.returncode)
 
 
+def log_text(value):
+    """ASCII-only diagnostic text so Windows console encodings cannot break verification."""
+    return str(value).encode('ascii', 'backslashreplace').decode('ascii')
+
+
 def run(failures, command, cwd, expect=None):
     env = {k: v for k, v in os.environ.items() if k not in ('PYTHONPATH', 'PYTHONHOME')}
     result = subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True, encoding='utf-8', errors='replace')
-    shown = ' '.join(str(Path(c).name) if i == 0 else str(c) for i, c in enumerate(command))
-    failures.check(result.returncode == 0, f'{shown} exited {result.returncode}: {result.stderr.strip()[-500:]}')
+    shown = log_text(' '.join(str(Path(c).name) if i == 0 else str(c) for i, c in enumerate(command)))
+    stderr = log_text(result.stderr.strip()[-500:])
+    failures.check(result.returncode == 0, f'{shown} exited {result.returncode}: {stderr}')
     if expect is not None:
         failures.check(expect in result.stdout, f'{shown} output lacks {expect!r}')
     print(f'ran {shown}: exit {result.returncode}')
