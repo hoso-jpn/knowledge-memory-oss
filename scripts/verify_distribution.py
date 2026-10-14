@@ -389,7 +389,7 @@ def install(args):
 
 def run(failures, command, cwd, expect=None):
     env = {k: v for k, v in os.environ.items() if k not in ('PYTHONPATH', 'PYTHONHOME')}
-    result = subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True, encoding='utf-8')
+    result = subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True, encoding='utf-8', errors='replace')
     shown = ' '.join(str(Path(c).name) if i == 0 else str(c) for i, c in enumerate(command))
     failures.check(result.returncode == 0, f'{shown} exited {result.returncode}: {result.stderr.strip()[-500:]}')
     if expect is not None:
