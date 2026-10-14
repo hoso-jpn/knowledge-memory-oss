@@ -31,9 +31,9 @@ packagingやmodule構成を変えた場合は、wheel / sdistそのものも確�
 
 ```bash
 rm -rf dist build src/*.egg-info
-python -m pip install build twine
+python -m pip install build==1.6.1 twine==7.0.0
 python -m build
-python -m twine check dist/*
+python -m twine check --strict dist/*
 python scripts/verify_distribution.py contents dist
 python scripts/verify_distribution.py install dist/knowledge_memory-*.whl
 python scripts/verify_distribution.py install dist/knowledge_memory-*.tar.gz
@@ -41,7 +41,9 @@ python scripts/verify_distribution.py install dist/knowledge_memory-*.tar.gz
 
 `install` はcheckout外の一時venvへartifactだけを入れ、`src/` ではなくsite-packagesからimportされることと、
 console scriptとsynthetic vaultでの `km` smoke testを確認する。wheel / sdistに入れてよいfileは
-`scripts/verify_distribution.py` に明記している。
+`scripts/verify_distribution.py` に明記している。CIはLinuxでPython 3.11 / 3.12 / 3.13、macOS / Windowsで
+Python 3.13のartifact installも確認する。optional dependencyはmodel weightをdownloadせず、依存packageが解決・install
+されるところまでを `--extra mcp` / `--extra semantic` でsmoke testする。
 
 ## Pull requests
 
