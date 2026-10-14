@@ -5,6 +5,7 @@ import importlib.util
 import io
 from pathlib import Path
 import shutil
+import sys
 import tarfile
 import tempfile
 import unittest
@@ -276,6 +277,47 @@ class VerifyDistributionTests(unittest.TestCase):
         self.assertEqual(raised.exception.code, 1)
 
 
+    def test_artifact_pattern_must_resolve_exactly_once(self):
+        first = Path(self.temp.name) / 'one.whl'
+        first.write_bytes(b'x')
+        self.assertEqual(self.verify.artifact_path(str(first)), first.resolve())
+        second = Path(self.temp.name) / 'two.whl'
+        second.write_bytes(b'y')
+        with self.assertRaises(SystemExit):
+            self.verify.artifact_path(str(Path(self.temp.name) / '*.whl'))
+        with self.assertRaises(SystemExit):
+            self.verify.artifact_path(str(Path(self.temp.name) / '*.tar.gz'))
+
+    def test_console_script_uses_platform_launcher_candidates(self):
+        bindir = Path(self.temp.name) / 'bin'
+        bindir.mkdir()
+        plain = bindir / 'km'
+        plain.write_text('', encoding='utf-8')
+        self.assertEqual(self.verify.console_script(bindir, 'km'), plain)
+
+
+    def test_windows_installed_source_comparison_ignores_only_crlf_translation(self):
+        self.assertTrue(self.verify.installed_source_matches(b'a\r\nb\r\n', b'a\nb\n', platform='nt'))
+        self.assertFalse(self.verify.installed_source_matches(b'a\r\nb\r\n', b'a\nb changed\n', platform='nt'))
+        self.assertFalse(self.verify.installed_source_matches(b'a\r\nb\r\n', b'a\nb\n', platform='posix'))
+
+
+    def test_run_replaces_non_utf8_console_bytes_instead_of_crashing(self):
+        failures = self.verify.Failures()
+        out = self.verify.run(
+            failures,
+            [sys.executable, '-c', "import os; os.write(1, b'\\x97usage: ok\\n')"],
+            self.temp.name,
+            expect='usage:',
+        )
+        self.assertEqual(list(failures), [])
+        self.assertIn('usage:', out)
+
+
+    def test_log_text_escapes_non_ascii_for_legacy_windows_consoles(self):
+        self.assertEqual(self.verify.log_text('search 育種'), r'search \u80b2\u7a2e')
+
+
 @unittest.skipUnless(SCRIPT.is_file(), 'the workflows ship with the source checkout, not the sdist')
 class WorkflowHygieneTests(unittest.TestCase):
     def test_workflows_are_read_only_bounded_and_drop_checkout_credentials(self):
@@ -292,6 +334,19 @@ class WorkflowHygieneTests(unittest.TestCase):
                     for step in job['steps']:
                         if step.get('uses', '').startswith('actions/checkout@'):
                             self.assertIs(step.get('with', {}).get('persist-credentials'), False, name)
+
+
+    def test_github_actions_are_pinned_to_commit_shas(self):
+        import re
+        import yaml
+        for path in sorted((ROOT / '.github/workflows').glob('*.yml')):
+            workflow = yaml.safe_load(path.read_text(encoding='utf-8'))
+            for job in workflow['jobs'].values():
+                for step in job['steps']:
+                    uses = step.get('uses', '')
+                    if uses.startswith('actions/'):
+                        ref = uses.rsplit('@', 1)[-1].split()[0]
+                        self.assertRegex(ref, re.compile(r'^[0-9a-f]{40}$'), uses)
 
 
 if __name__ == '__main__':

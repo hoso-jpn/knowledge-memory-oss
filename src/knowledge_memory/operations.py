@@ -8,7 +8,10 @@ import importlib.metadata
 import json
 import os
 import platform
-import resource
+try:
+    import resource
+except ImportError:  # Windows has no resource module.
+    resource = None
 import shutil
 import sqlite3
 import statistics
@@ -32,13 +35,21 @@ def sha(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
+def peak_rss(resource_module=resource):
+    """Best-effort native peak RSS; unavailable where Python has no resource module."""
+    if resource_module is None:
+        return None
+    return resource_module.getrusage(resource_module.RUSAGE_SELF).ru_maxrss
+
+
 def environment():
+    rss = peak_rss()
     return {'python': platform.python_version(), 'platform': platform.platform(),
             'machine': platform.machine(), 'cpu': platform.processor(), 'logical_cpus': os.cpu_count(),
             'sqlite': sqlite3.sqlite_version, 'package': importlib.metadata.version('knowledge-memory'),
             'ram_bytes': os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') if hasattr(os, 'sysconf') else None,
-            'peak_rss_native': resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
-            'peak_rss_unit': 'bytes' if sys.platform == 'darwin' else 'KiB',
+            'peak_rss_native': rss,
+            'peak_rss_unit': ('bytes' if sys.platform == 'darwin' else 'KiB') if rss is not None else None,
             'api_calls': 0, 'api_cost': 0, 'electricity_cost': None,
             'mcp_connected': False, 'cloud_auto_connected': False}
 

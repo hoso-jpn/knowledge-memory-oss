@@ -2,30 +2,32 @@ name: package
 on: [push, pull_request]
 permissions:
   contents: read
+
 jobs:
   # Build once: the wheel is pure Python (py3-none-any), so every supported Python installs the same files.
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.13'
-      - run: python -m pip install build twine
+      - run: python -m pip install build==1.6.1 twine==7.0.0
       - run: python -m build
-      - run: python -m twine check dist/*
+      - run: python -m twine check --strict dist/*
       - run: python scripts/verify_distribution.py contents dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dist
           path: dist/
           if-no-files-found: error
           retention-days: 7
+
   install:
-    name: install ${{ matrix.artifact }} on ${{ matrix.python-version }}
+    name: install ${{ matrix.artifact }} on Python ${{ matrix.python-version }} / Linux
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -35,15 +37,59 @@ jobs:
         python-version: ['3.11', '3.12', '3.13']
         artifact: [whl, tar.gz]
     steps:
-      # The checkout supplies only the verify script and the synthetic vault; the package comes from the artifact.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: dist
           path: ${{ runner.temp }}/dist
-      - run: python scripts/verify_distribution.py install "$RUNNER_TEMP"/dist/*.${{ matrix.artifact }}
+      - run: python scripts/verify_distribution.py install "${{ runner.temp }}/dist/*.${{ matrix.artifact }}"
+
+  cross-platform:
+    name: install ${{ matrix.artifact }} on ${{ matrix.os }} / Python 3.13
+    needs: build
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+        artifact: [whl, tar.gz]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: ${{ runner.temp }}/dist
+      - run: python scripts/verify_distribution.py install "${{ runner.temp }}/dist/*.${{ matrix.artifact }}"
+
+  extras:
+    name: install wheel[${{ matrix.extra }}] on Linux / Python 3.13
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        extra: [mcp, semantic]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: ${{ runner.temp }}/dist
+      - run: python scripts/verify_distribution.py install "${{ runner.temp }}/dist/*.whl" --extra "${{ matrix.extra }}"

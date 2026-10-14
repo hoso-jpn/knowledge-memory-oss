@@ -7,7 +7,8 @@
 
 `install` creates a fresh venv outside the checkout, installs only the given artifact and
 re-runs this script there as `smoke`. Standard library only; nothing is uploaded anywhere.
-CI runs it on Linux only; other platforms are not checked.
+CI verifies wheel/sdist installation on Linux and Python 3.11-3.13, plus macOS/Windows on Python 3.13.
+Optional-dependency smoke checks install extras without downloading model weights.
 """
 from __future__ import annotations
 
@@ -16,6 +17,7 @@ import base64
 import configparser
 import csv
 import email.parser
+import glob
 import hashlib
 import importlib.metadata
 import io
@@ -58,6 +60,7 @@ SPECIFIER = re.compile(r'(?:===|~=|==|!=|<=|>=|<|>)\s*[A-Za-z0-9.*+!_-]+')
 EXTRA_MARKER = re.compile(r'extra\s*==\s*(?P<q>[\'"])(?P<extra>[A-Za-z0-9._-]+)(?P=q)')
 SMOKE_VAULT = ROOT / 'examples' / 'vault'
 SMOKE_QUERY, SMOKE_ID = '育種', 'note-search-example'
+EXTRA_DISTRIBUTIONS = {'mcp': 'mcp', 'semantic': 'sentence-transformers'}
 
 
 class Failures(list):
@@ -336,43 +339,90 @@ def contents(args):
     failures.exit(f'contents of {", ".join(found)}')
 
 
-def install(args):
-    artifact = Path(args.artifact).resolve()
+def artifact_path(pattern):
+    """Resolve exactly one artifact; workflow wildcards are expanded here for cross-platform shells."""
+    matches = [Path(p) for p in glob.glob(pattern)]
+    if not matches and Path(pattern).is_file():
+        matches = [Path(pattern)]
+    if len(matches) != 1:
+        raise SystemExit(f'expected exactly one artifact matching the supplied path, found {len(matches)}')
+    artifact = matches[0].resolve()
     if not artifact.name.endswith(('.whl', '.tar.gz')):
-        raise SystemExit(f'not a wheel or sdist: {artifact}')
+        raise SystemExit(f'not a wheel or sdist: {artifact.name}')
+    return artifact
+
+
+def venv_python(root):
+    return root / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
+
+
+def console_script(bindir, name):
+    """Return the installed console launcher without assuming POSIX filename rules."""
+    candidates = [bindir / name]
+    if os.name == 'nt':
+        candidates = [bindir / f'{name}.exe', bindir / f'{name}.cmd', bindir / f'{name}.bat', *candidates]
+    return next((path for path in candidates if path.is_file()), None)
+
+
+def install(args):
+    artifact = artifact_path(args.artifact)
+    if args.extra and args.extra not in EXTRA_DISTRIBUTIONS:
+        raise SystemExit(f'unknown extra: {args.extra}')
     with tempfile.TemporaryDirectory(prefix='km-dist-') as tmp:
         tmp = Path(tmp)
         if tmp.is_relative_to(ROOT):
             raise SystemExit(f'temporary directory must be outside the checkout: {tmp}')
-        # symlinks keep interpreters that are themselves symlinks (e.g. uv-managed) able to find their stdlib.
-        venv.create(tmp / 'venv', with_pip=True, symlinks=True)
-        python = tmp / 'venv' / 'bin' / 'python'
+        # POSIX symlinks preserve uv-managed interpreters; Windows uses copies to avoid symlink privileges.
+        venv.create(tmp / 'venv', with_pip=True, symlinks=(os.name != 'nt'))
+        python = venv_python(tmp / 'venv')
         env = {k: v for k, v in os.environ.items() if k not in ('PYTHONPATH', 'PYTHONHOME')}
+        target = str(artifact) + (f'[{args.extra}]' if args.extra else '')
         subprocess.run([python, '-m', 'pip', 'install', '--disable-pip-version-check', '--no-input',
-                        str(artifact)], check=True, cwd=tmp, env=env)
+                        target], check=True, cwd=tmp, env=env)
         # -I keeps PYTHONPATH, user site-packages and this script's directory out of sys.path.
-        result = subprocess.run([python, '-I', str(Path(__file__).resolve()), 'smoke', str(artifact)],
-                                cwd=tmp, env=env)
+        command = [python, '-I', str(Path(__file__).resolve()), 'smoke', str(artifact)]
+        if args.extra:
+            command += ['--extra', args.extra]
+        result = subprocess.run(command, cwd=tmp, env=env)
         raise SystemExit(result.returncode)
+
+
+def log_text(value):
+    """ASCII-only diagnostic text so Windows console encodings cannot break verification."""
+    return str(value).encode('ascii', 'backslashreplace').decode('ascii')
 
 
 def run(failures, command, cwd, expect=None):
     env = {k: v for k, v in os.environ.items() if k not in ('PYTHONPATH', 'PYTHONHOME')}
-    result = subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True, encoding='utf-8')
-    shown = ' '.join(str(Path(c).name) if i == 0 else str(c) for i, c in enumerate(command))
-    failures.check(result.returncode == 0, f'{shown} exited {result.returncode}: {result.stderr.strip()[-500:]}')
+    result = subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True, encoding='utf-8', errors='replace')
+    shown = log_text(' '.join(str(Path(c).name) if i == 0 else str(c) for i, c in enumerate(command)))
+    stderr = log_text(result.stderr.strip()[-500:])
+    failures.check(result.returncode == 0, f'{shown} exited {result.returncode}: {stderr}')
     if expect is not None:
         failures.check(expect in result.stdout, f'{shown} output lacks {expect!r}')
     print(f'ran {shown}: exit {result.returncode}')
     return result.stdout
 
 
+def installed_source_matches(installed, source, platform=None):
+    """Compare Python source bytes, allowing only Git's CRLF checkout translation on Windows."""
+    if platform is None:
+        platform = os.name
+    if platform == 'nt':
+        installed = installed.replace(b'\r\n', b'\n')
+        source = source.replace(b'\r\n', b'\n')
+    return installed == source
+
+
 def check_installed_modules(failures, package_dir):
-    """The installed package holds exactly the src/ modules, byte for byte, whether from wheel or sdist."""
+    """The installed package holds exactly the src/ modules; Windows ignores checkout CRLF translation."""
     installed = {f'{PACKAGE}/{p.relative_to(package_dir).as_posix()}'
                  for p in package_dir.rglob('*.py') if '__pycache__' not in p.parts}
     failures.check(installed == modules(), f'installed module set differs from src: {sorted(installed ^ modules())}')
-    changed = sorted(n for n in installed & modules() if (package_dir.parent / n).read_bytes() != module_bytes(n))
+    changed = sorted(
+        n for n in installed & modules()
+        if not installed_source_matches((package_dir.parent / n).read_bytes(), module_bytes(n))
+    )
     failures.check(not changed, f'installed modules differ from src: {changed}')
 
 
@@ -406,17 +456,28 @@ def smoke(args):
                    'installed license file differs from the repository LICENSE')
     failures.check(dist.metadata['License-Expression'] == LICENSE_EXPRESSION,
                    f'installed License-Expression is {dist.metadata["License-Expression"]!r}')
+    if args.extra:
+        dependency = EXTRA_DISTRIBUTIONS.get(args.extra)
+        try:
+            installed_extra_version = importlib.metadata.version(dependency) if dependency else None
+        except importlib.metadata.PackageNotFoundError:
+            installed_extra_version = None
+        failures.check(bool(installed_extra_version), f'extra {args.extra!r} dependency is not installed')
     failures.stop(label)
 
     bindir = Path(sysconfig.get_path('scripts'))
     with tempfile.TemporaryDirectory(prefix='km-smoke-') as tmp:
         run(failures, [sys.executable, '-I', '-m', PACKAGE, '--help'], tmp, expect='usage:')
+        launchers = {}
         for name in meta.get('scripts', {}):
-            script = bindir / name
-            failures.check(script.is_file(), f'console script {name} is not installed in {bindir}')
-            if script.is_file():
+            script = console_script(bindir, name)
+            failures.check(script is not None, f'console script {name} is not installed')
+            if script is not None:
+                launchers[name] = script
                 run(failures, [script, '--help'], tmp, expect='usage:')
-        km, db = bindir / 'km', Path(tmp) / 'smoke.sqlite3'
+        km, db = launchers.get('km'), Path(tmp) / 'smoke.sqlite3'
+        failures.check(km is not None, 'km console script is not installed')
+        failures.stop(label)
         run(failures, [km, 'validate', '--vault', SMOKE_VAULT], tmp, expect='"valid": true')
         run(failures, [km, 'index', '--vault', SMOKE_VAULT, '--db', db], tmp, expect='"indexed"')
         run(failures, [km, 'search', '--db', db, '--scope', 'demo', SMOKE_QUERY], tmp, expect=f'"id": "{SMOKE_ID}"')
@@ -428,8 +489,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest='command', required=True)
     sub.add_parser('contents', help='check wheel and sdist files and metadata').add_argument('dist')
-    sub.add_parser('install', help='install one artifact into a fresh venv and smoke-test it').add_argument('artifact')
-    sub.add_parser('smoke', help='internal: run inside the venv created by install').add_argument('artifact')
+    install_parser = sub.add_parser('install', help='install one artifact into a fresh venv and smoke-test it')
+    install_parser.add_argument('artifact', help='artifact path or a pattern that resolves to exactly one file')
+    install_parser.add_argument('--extra', choices=sorted(EXTRA_DISTRIBUTIONS))
+    smoke_parser = sub.add_parser('smoke', help='internal: run inside the venv created by install')
+    smoke_parser.add_argument('artifact')
+    smoke_parser.add_argument('--extra', choices=sorted(EXTRA_DISTRIBUTIONS))
     args = parser.parse_args()
     {'contents': contents, 'install': install, 'smoke': smoke}[args.command](args)
 

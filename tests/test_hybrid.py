@@ -65,6 +65,10 @@ class HybridTests(unittest.TestCase):
                 build_vectors(self.db, target, 'demo', self.encoder)
         self.assertEqual(before, self.db.read_bytes())
 
+    def test_peak_rss_is_optional_when_platform_lacks_resource(self):
+        from knowledge_memory.hybrid import peak_rss_kib
+        self.assertIsNone(peak_rss_kib(None))
+
     def test_compare_records_improvements_and_regressions(self):
         result = compare(self.db, self.vectors, 'demo', [
             {'id': 'id', 'query': 'decision-model', 'expect_ids': ['decision-model']}], self.encoder)

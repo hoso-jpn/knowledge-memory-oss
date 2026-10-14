@@ -6,7 +6,7 @@ import unittest
 import zipfile
 
 from knowledge_memory.core import MemoryError, build_index, get_note, search_notes
-from knowledge_memory.operations import backup, benchmark, probe_mcp, recovery_check, restore, time_comparison
+from knowledge_memory.operations import backup, benchmark, peak_rss, probe_mcp, recovery_check, restore, time_comparison
 
 FIXTURE = Path(__file__).resolve().parents[1] / 'examples/context-vault'
 
@@ -56,6 +56,10 @@ class OperationTests(unittest.TestCase):
         self.assertEqual(len(result['rows'][0]['hash_seconds']), 2)
         self.assertFalse(result['environment']['cloud_auto_connected'])
         self.assertIsNone(result['environment']['electricity_cost'])
+
+
+    def test_peak_rss_is_optional_without_resource_module(self):
+        self.assertIsNone(peak_rss(None))
 
     def test_real_stdio_probe_distinguishes_cloud_and_model(self):
         db = self.root / 'index.sqlite3'
