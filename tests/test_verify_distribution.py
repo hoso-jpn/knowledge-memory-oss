@@ -323,11 +323,7 @@ class WorkflowHygieneTests(unittest.TestCase):
                     uses = step.get('uses', '')
                     if uses.startswith('actions/'):
                         ref = uses.rsplit('@', 1)[-1].split()[0]
-                        self.assertRegex(ref, re.compile(r'^[0-9a-f]{40}
-
-if __name__ == '__main__':
-    unittest.main()
-), uses)
+                        self.assertRegex(ref, re.compile(r'^[0-9a-f]{40}$'), uses)
 
 
 if __name__ == '__main__':
