@@ -314,6 +314,10 @@ class VerifyDistributionTests(unittest.TestCase):
         self.assertIn('usage:', out)
 
 
+    def test_log_text_escapes_non_ascii_for_legacy_windows_consoles(self):
+        self.assertEqual(self.verify.log_text('search 育種'), r'search \u80b2\u7a2e')
+
+
 @unittest.skipUnless(SCRIPT.is_file(), 'the workflows ship with the source checkout, not the sdist')
 class WorkflowHygieneTests(unittest.TestCase):
     def test_workflows_are_read_only_bounded_and_drop_checkout_credentials(self):
