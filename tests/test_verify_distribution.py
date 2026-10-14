@@ -5,6 +5,7 @@ import importlib.util
 import io
 from pathlib import Path
 import shutil
+import sys
 import tarfile
 import tempfile
 import unittest
@@ -299,6 +300,18 @@ class VerifyDistributionTests(unittest.TestCase):
         self.assertTrue(self.verify.installed_source_matches(b'a\r\nb\r\n', b'a\nb\n', platform='nt'))
         self.assertFalse(self.verify.installed_source_matches(b'a\r\nb\r\n', b'a\nb changed\n', platform='nt'))
         self.assertFalse(self.verify.installed_source_matches(b'a\r\nb\r\n', b'a\nb\n', platform='posix'))
+
+
+    def test_run_replaces_non_utf8_console_bytes_instead_of_crashing(self):
+        failures = self.verify.Failures()
+        out = self.verify.run(
+            failures,
+            [sys.executable, '-c', "import os; os.write(1, b'\\x97usage: ok\\n')"],
+            self.temp.name,
+            expect='usage:',
+        )
+        self.assertEqual(list(failures), [])
+        self.assertIn('usage:', out)
 
 
 @unittest.skipUnless(SCRIPT.is_file(), 'the workflows ship with the source checkout, not the sdist')
